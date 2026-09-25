@@ -1,0 +1,122 @@
+# Plantilla del workflow completo del laboratorio 1001.
+#
+# No se pega tal cual: el notebook 00_preparar_entorno sustituye __RUTA_LAB__
+# por la carpeta donde has clonado el repositorio e imprime el YAML listo para
+# pegar en "Edit as YAML". El catalogo es un parametro del job: cambiandolo,
+# el mismo workflow escribe en otro catalogo sin tocar ninguna tarea.
+resources:
+  jobs:
+    workflow_vuelos_1001:
+      name: 1001-workflow-vuelos
+      parameters:
+        - name: catalogo
+          default: lab1001
+      tasks:
+        # --- Bronze: cuatro ingestas en paralelo, el mismo script -------------
+        - task_key: ingesta_aeronaves
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/aeronaves.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.dim_aeronaves
+          environment_key: Default
+        - task_key: ingesta_aeropuertos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/aeropuertos.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.dim_aeropuertos
+          environment_key: Default
+        - task_key: ingesta_vuelos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/vuelos_diarios.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.fact_vuelos
+          environment_key: Default
+        - task_key: ingesta_mantenimientos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/mantenimientos.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.fact_mantenimientos
+          environment_key: Default
+
+        # --- Silver: cada validacion espera solo a su ingesta -----------------
+        - task_key: validar_aeronaves
+          depends_on:
+            - task_key: ingesta_aeronaves
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.dim_aeronaves
+              - --output_table={{job.parameters.catalogo}}.silver.dim_aeronaves
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/config.json
+              - --table_name=aeronaves
+          environment_key: Default
+        - task_key: validar_aeropuertos
+          depends_on:
+            - task_key: ingesta_aeropuertos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.dim_aeropuertos
+              - --output_table={{job.parameters.catalogo}}.silver.dim_aeropuertos
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/config.json
+              - --table_name=aeropuertos
+          environment_key: Default
+        - task_key: validar_vuelos
+          depends_on:
+            - task_key: ingesta_vuelos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.fact_vuelos
+              - --output_table={{job.parameters.catalogo}}.silver.fact_vuelos
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/config.json
+              - --table_name=vuelos
+          environment_key: Default
+        - task_key: validar_mantenimientos
+          depends_on:
+            - task_key: ingesta_mantenimientos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.fact_mantenimientos
+              - --output_table={{job.parameters.catalogo}}.silver.fact_mantenimientos
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/config.json
+              - --table_name=mantenimientos
+          environment_key: Default
+
+        # --- Gold: cada KPI espera a todas las tablas que usa ------------------
+        - task_key: puntualidad_vuelos
+          depends_on:
+            - task_key: validar_vuelos
+            - task_key: validar_aeronaves
+            - task_key: validar_aeropuertos
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/03_puntualidad.py
+            parameters:
+              - --vuelos_table={{job.parameters.catalogo}}.silver.fact_vuelos
+              - --aeronaves_table={{job.parameters.catalogo}}.silver.dim_aeronaves
+              - --aeropuertos_table={{job.parameters.catalogo}}.silver.dim_aeropuertos
+              - --output_table={{job.parameters.catalogo}}.gold.puntualidad_vuelos
+          environment_key: Default
+        - task_key: coste_mantenimiento
+          depends_on:
+            - task_key: validar_mantenimientos
+            - task_key: validar_aeronaves
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/04_coste_mantenimiento.py
+            parameters:
+              - --mantenimiento_table={{job.parameters.catalogo}}.silver.fact_mantenimientos
+              - --aeronaves_table={{job.parameters.catalogo}}.silver.dim_aeronaves
+              - --output_table={{job.parameters.catalogo}}.gold.coste_mantenimiento
+          environment_key: Default
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            client: "2"
+      performance_target: PERFORMANCE_OPTIMIZED

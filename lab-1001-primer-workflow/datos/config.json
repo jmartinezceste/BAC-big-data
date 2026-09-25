@@ -1,0 +1,85 @@
+{
+  "aeronaves": {
+    "columnas_completas": [
+      "aeronave_id",
+      "modelo",
+      "fabricante",
+      "anio_fabricacion"
+    ],
+    "claves_primarias": [
+      "aeronave_id"
+    ],
+    "columnas_numericas": {
+      "anio_fabricacion": [
+        1950,
+        2030
+      ]
+    },
+    "columna_fecha": ""
+  },
+  "aeropuertos": {
+    "columnas_completas": [
+      "aeropuerto_id",
+      "nombre",
+      "ciudad",
+      "pais",
+      "lat",
+      "lon"
+    ],
+    "claves_primarias": [
+      "aeropuerto_id"
+    ],
+    "columnas_numericas": {
+      "lat": [
+        -200,
+        200
+      ],
+      "lon": [
+        -200,
+        200
+      ]
+    },
+    "columna_fecha": ""
+  },
+  "vuelos": {
+    "columnas_completas": [
+      "vuelo_id",
+      "fecha",
+      "origen_id",
+      "destino_id",
+      "aeronave_id",
+      "estado",
+      "duracion_min"
+    ],
+    "claves_primarias": [
+      "vuelo_id"
+    ],
+    "columnas_numericas": {
+      "duracion_min": [
+        0,
+        1440
+      ]
+    },
+    "columna_fecha": "fecha"
+  },
+  "mantenimientos": {
+    "columnas_completas": [
+      "mantenimiento_id",
+      "aeronave_id",
+      "fecha",
+      "tipo",
+      "costo_usd",
+      "duracion_hr"
+    ],
+    "claves_primarias": [
+      "mantenimiento_id"
+    ],
+    "columnas_numericas": {
+      "costo_usd": [
+        0,
+        1000000
+      ]
+    },
+    "columna_fecha": "fecha"
+  }
+}
