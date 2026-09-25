@@ -62,8 +62,7 @@ def main():
     df = (df.withColumn("_motivos", F.filter(etiquetas, lambda x: x.isNotNull()))
             .withColumn("motivo", F.concat_ws(", ", "_motivos"))
             .withColumn("_es_mala", F.size("_motivos") > 0)
-            .drop("_motivos")
-            .cache())
+            .drop("_motivos"))
 
     validas = df.filter(~F.col("_es_mala")).drop("_es_mala", "motivo")
     malas = (df.filter(F.col("_es_mala")).drop("_es_mala")
