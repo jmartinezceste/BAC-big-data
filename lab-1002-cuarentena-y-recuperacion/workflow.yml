@@ -1,0 +1,103 @@
+# Plantilla del workflow del laboratorio 1002: ingesta y validacion con
+# cuarentena. La tarea que corrige la cuarentena (el notebook
+# 03_correcciones_cuarentena) la anade el alumno a mano en el bloque 4 de la
+# guia: primero ve la cuarentena llena y la entiende.
+#
+# El notebook 00_preparar_entorno sustituye __RUTA_LAB__ (esta carpeta) y
+# __RUTA_TEMA__ (la carpeta del tema, donde vive el script de ingesta del 1001)
+# e imprime el YAML listo para pegar en "Edit as YAML".
+resources:
+  jobs:
+    workflow_cuarentena_1002:
+      name: 1002-workflow-cuarentena
+      parameters:
+        - name: catalogo
+          default: lab1002
+      tasks:
+        # --- Bronze: el mismo script de ingesta del laboratorio 1001 ----------
+        - task_key: ingesta_aircraft
+          spark_python_task:
+            python_file: __RUTA_TEMA__/lab-1001-primer-workflow/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/dim_aircraft.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.dim_aircraft
+          environment_key: Default
+        - task_key: ingesta_phase
+          spark_python_task:
+            python_file: __RUTA_TEMA__/lab-1001-primer-workflow/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/dim_phase.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.dim_phase
+          environment_key: Default
+        - task_key: ingesta_sensor_reading
+          spark_python_task:
+            python_file: __RUTA_TEMA__/lab-1001-primer-workflow/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/dim_sensor_reading.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.dim_sensor_reading
+          environment_key: Default
+        - task_key: ingesta_engine_sensor
+          spark_python_task:
+            python_file: __RUTA_TEMA__/lab-1001-primer-workflow/src/01_ingesta.py
+            parameters:
+              - --input_file=/Volumes/{{job.parameters.catalogo}}/landing/datos/fact_sensor.csv
+              - --output_table={{job.parameters.catalogo}}.bronze.fact_engine_sensor
+          environment_key: Default
+
+        # --- Silver + cuarentena: cada validacion espera a su ingesta ----------
+        - task_key: validar_aircraft
+          depends_on:
+            - task_key: ingesta_aircraft
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar_cuarentena.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.dim_aircraft
+              - --output_table={{job.parameters.catalogo}}.silver.dim_aircraft
+              - --quarantine_table={{job.parameters.catalogo}}.cuarentena.dim_aircraft
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/esquemas.json
+              - --table_name=dim_aircraft
+          environment_key: Default
+        - task_key: validar_phase
+          depends_on:
+            - task_key: ingesta_phase
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar_cuarentena.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.dim_phase
+              - --output_table={{job.parameters.catalogo}}.silver.dim_phase
+              - --quarantine_table={{job.parameters.catalogo}}.cuarentena.dim_phase
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/esquemas.json
+              - --table_name=dim_phase
+          environment_key: Default
+        - task_key: validar_sensor_reading
+          depends_on:
+            - task_key: ingesta_sensor_reading
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar_cuarentena.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.dim_sensor_reading
+              - --output_table={{job.parameters.catalogo}}.silver.dim_sensor_reading
+              - --quarantine_table={{job.parameters.catalogo}}.cuarentena.dim_sensor_reading
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/esquemas.json
+              - --table_name=dim_sensor_reading
+          environment_key: Default
+        - task_key: validar_engine_sensor
+          depends_on:
+            - task_key: ingesta_engine_sensor
+          spark_python_task:
+            python_file: __RUTA_LAB__/src/02_validar_cuarentena.py
+            parameters:
+              - --input_table={{job.parameters.catalogo}}.bronze.fact_engine_sensor
+              - --output_table={{job.parameters.catalogo}}.silver.fact_engine_sensor
+              - --quarantine_table={{job.parameters.catalogo}}.cuarentena.fact_engine_sensor
+              - --config_path=/Volumes/{{job.parameters.catalogo}}/landing/datos/esquemas.json
+              - --table_name=fact_engine_sensor
+          environment_key: Default
+
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            client: "2"
+      performance_target: PERFORMANCE_OPTIMIZED
