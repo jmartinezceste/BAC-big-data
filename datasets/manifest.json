@@ -1,0 +1,260 @@
+{
+  "dataset_version": "1.2",
+  "synthetic": true,
+  "generation": "deterministic formulas; no randomness",
+  "created_date": "2026-09-26",
+  "pyarrow_version": "25.0.1",
+  "parquet_rows": 251501,
+  "parquet_null_emails": 25151,
+  "sales_rows": 12484,
+  "csv_fixture_rows": 8,
+  "kafka_event_rows": 5252,
+  "kafka_exploded_item_rows": 3506,
+  "files": [
+    {
+      "file": "users-historical/part-00000.snappy.parquet",
+      "rows": 62876,
+      "format": "parquet",
+      "bytes": 1354710,
+      "sha256": "24936971d58a424e401a4aae52e9fd86dacf1ee102a3bb9ee128ab157d5af62b",
+      "compression": "snappy",
+      "null_emails": 6288
+    },
+    {
+      "file": "users-historical/part-00001.snappy.parquet",
+      "rows": 62875,
+      "format": "parquet",
+      "bytes": 1354721,
+      "sha256": "923461b662551d2c25ddb447495c852772d97d36503c12d3f833f3b8b44cb7d3",
+      "compression": "snappy",
+      "null_emails": 6288
+    },
+    {
+      "file": "users-historical/part-00002.snappy.parquet",
+      "rows": 62875,
+      "format": "parquet",
+      "bytes": 1356399,
+      "sha256": "9ea71e641b2e72fd79cef9c6e5ac9e85a11ca917e8547894ad4feb9673fa356b",
+      "compression": "snappy",
+      "null_emails": 6287
+    },
+    {
+      "file": "users-historical/part-00003.snappy.parquet",
+      "rows": 62875,
+      "format": "parquet",
+      "bytes": 1353805,
+      "sha256": "8081fea96353ca490b6b9f86b1c0f870b9b73c17d828f0eb4c9c97e8940c81d9",
+      "compression": "snappy",
+      "null_emails": 6288
+    },
+    {
+      "file": "sales-csv/000.csv",
+      "rows": 3149,
+      "format": "csv",
+      "bytes": 1178916,
+      "sha256": "15e34fede1c89e57c12280067fc201c0a69e989bcd096209fb8f07ce553de910",
+      "delimiter": "|",
+      "header": true,
+      "encoding": "UTF-8",
+      "escape": "backslash",
+      "order_id_min": 298592,
+      "order_id_max": 301740,
+      "quoting": "all fields quoted; inner quotes escaped with backslash"
+    },
+    {
+      "file": "sales-csv/001.csv",
+      "rows": 2932,
+      "format": "csv",
+      "bytes": 1097900,
+      "sha256": "3d01b82794f4d894a7a2c30c729389193c5d3924e5e69e3d8a0ee3e8c0970a7c",
+      "delimiter": "|",
+      "header": true,
+      "encoding": "UTF-8",
+      "escape": "backslash",
+      "order_id_min": 301741,
+      "order_id_max": 304672,
+      "quoting": "all fields quoted; inner quotes escaped with backslash"
+    },
+    {
+      "file": "sales-csv/002.csv",
+      "rows": 3200,
+      "format": "csv",
+      "bytes": 1197963,
+      "sha256": "dd7e2b9142f931c86aed603599c22e27d90df883b845255895417b5f00b6d000",
+      "delimiter": "|",
+      "header": true,
+      "encoding": "UTF-8",
+      "escape": "backslash",
+      "order_id_min": 304673,
+      "order_id_max": 307872,
+      "quoting": "all fields quoted; inner quotes escaped with backslash"
+    },
+    {
+      "file": "sales-csv/003.csv",
+      "rows": 3203,
+      "format": "csv",
+      "bytes": 1199274,
+      "sha256": "090fae45d3651ab308bce7fbdfafc6b28a39adb5a5973e86c970143f0f58599e",
+      "delimiter": "|",
+      "header": true,
+      "encoding": "UTF-8",
+      "escape": "backslash",
+      "order_id_min": 307873,
+      "order_id_max": 311075,
+      "quoting": "all fields quoted; inner quotes escaped with backslash"
+    },
+    {
+      "file": "csv-demo-files/malformed_example_1_data.csv",
+      "rows": 4,
+      "format": "csv",
+      "bytes": 230,
+      "sha256": "5b7747b2df2a5ceecb8f78362a36c2e776c43b3c082ac6683f75ded0628fb4ec",
+      "intentional_defect": "one aaa timestamp"
+    },
+    {
+      "file": "csv-demo-files/malformed_example_2_data.csv",
+      "rows": 4,
+      "format": "csv",
+      "bytes": 235,
+      "sha256": "3a8e6d77ce935617d2e686f1f90b71e55566c88fdc235311305ad84d6e939ced",
+      "intentional_defect": "empty first header name"
+    },
+    {
+      "file": "events-kafka/000.json",
+      "rows": 1126,
+      "format": "jsonl",
+      "bytes": 688556,
+      "sha256": "4eb41e81aef48fd7028e2132b257f6f2241b46da74d81e9540fe741a31226875",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/001.json",
+      "rows": 1126,
+      "format": "jsonl",
+      "bytes": 571474,
+      "sha256": "ab5a4461c1ac5e3a55f83a0886a2d6437b8c8da77ca06fa695fce5fd68014e83",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/002.json",
+      "rows": 400,
+      "exploded_item_rows": 400,
+      "format": "jsonl",
+      "bytes": 286736,
+      "sha256": "10defc9bc0bd927db6dd543325b6eb44995b640b0e2843abfd41db680334ad6f",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/003.json",
+      "rows": 500,
+      "exploded_item_rows": 500,
+      "format": "jsonl",
+      "bytes": 358568,
+      "sha256": "9409ccea4dc7366f86c4c93a2c874fd1e95078f21debbef0bf99707efeb98a79",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/004.json",
+      "rows": 600,
+      "exploded_item_rows": 600,
+      "format": "jsonl",
+      "bytes": 430700,
+      "sha256": "2c9f260e39807510de633d24fe0b608b5f6b74f9d305f9357ebc958a113c5859",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/005.json",
+      "rows": 400,
+      "exploded_item_rows": 400,
+      "format": "jsonl",
+      "bytes": 287128,
+      "sha256": "4dc6b34f7d3169fdb62758e655bb467a07d80a65aa24e2dd753b89b899604c28",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/006.json",
+      "rows": 500,
+      "exploded_item_rows": 500,
+      "format": "jsonl",
+      "bytes": 374300,
+      "sha256": "116cef026f7185eb407cb0e935d4219cc1e212d965d909d6369ffa78239d1a65",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    },
+    {
+      "file": "events-kafka/007.json",
+      "rows": 600,
+      "exploded_item_rows": 600,
+      "format": "jsonl",
+      "bytes": 449120,
+      "sha256": "aee16667e77b5eddbe4674062e7870a7d4d87df7c8250bbfa71c34c89cd38785",
+      "topic": "clickstream",
+      "encoding": "UTF-8",
+      "base64_fields": [
+        "key",
+        "value"
+      ]
+    }
+  ],
+  "validation": {
+    "local": "passed: reread all Parquet, CSV and Kafka JSONL; schemas, compression, counts, IDs, emails, dates, JSON, Base64, offsets, amounts, quantities and intended defects",
+    "databricks": "pending: Spark/read_files parsing, rescued column behavior, CTAS, COPY INTO, Auto Loader, STRUCT, explode and VARIANT",
+    "kafka_expansion_local": "passed: all eight JSONL files reread; Base64, JSON, keys, contiguous unique offsets per partition, timestamp units, item quantities and revenues; original two hashes unchanged"
+  },
+  "updated_date": "2026-09-27",
+  "kafka_original_batches": {
+    "files": [
+      "000.json",
+      "001.json"
+    ],
+    "rows": 2252,
+    "exploded_item_rows": 506
+  },
+  "kafka_expansion": {
+    "date": "2026-09-27",
+    "rows": 3000,
+    "new_files": [
+      "002.json",
+      "003.json",
+      "004.json",
+      "005.json",
+      "006.json",
+      "007.json"
+    ],
+    "schema_evolution": "Optional campaign object in 006.json and 007.json; raw JSON and VARIANT retain it; fixed STRUCT requires extending its schema."
+  }
+}

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 05 · Laboratorio 1 · Ingesta de Parquet con CTAS y COPY INTO</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 21 pasos completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 05 · Laboratorio 1</p>
+  <h1>Ingesta de Parquet con CTAS y COPY INTO</h1>
+  <p class="sub">Cargas un histórico de 251.501 usuarios guardado en Parquet de tres formas —CTAS, PySpark y COPY INTO— y compruebas qué diferencia a cada una: cuál crea la tabla, cuál recarga todo y cuál recuerda lo que ya cargó. Por el camino provocas un error de esquema y lo resuelves.</p>
+  <div class="meta"><span><b>6 bloques</b> · 21 pasos</span><span>Unos 50 minutos</span><span>Todo el código se copia con un clic</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Explorar los ficheros</a><a href="#b3"><span>2</span>Cargar el histórico con CTAS</a><a href="#b4"><span>3</span>La misma carga en PySpark</a><a href="#b5"><span>4</span>COPY INTO y el error de esquema</a><a href="#b6"><span>5</span>Repetir la carga no duplica</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso. Lo clonas en un <b>Git folder</b>, una carpeta de tu Workspace conectada a un repositorio Git. Después, un notebook de preparación crea el catálogo <code>lab0501</code> y copia los cuatro Parquet a un volumen.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>. Dentro, la carpeta <b>datasets</b> y la carpeta <b>lab-0501-ingest-ctas-copy-into</b>, con los notebooks <code>00_preparar_entorno</code> y <code>01_ingesta_ctas_copy_into</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Al final, el mensaje <i>Entorno listo: /Volumes/lab0501/upload/upload/users-historical contiene 4 Parquet con 251501 filas.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Pulsa <b>Catalog</b> en la barra lateral y despliega <b>lab0501 → upload → Volumes → upload → users-historical</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Los cuatro ficheros <code>part-00000.snappy.parquet</code> a <code>part-00003.snappy.parquet</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para en la primera comprobación con <i>No encuentro …/datasets/users-historical</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si falla al crear el catálogo con un error de permisos, tu workspace no te deja crear catálogos: avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Explorar los ficheros<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Un volumen guarda <b>ficheros</b>, no tablas. Antes de cargar nada, miras qué hay y cuántas filas traen. Esa cifra, <b>251.501</b>, es la que comprobarás después de cada carga.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Abre el notebook <b>01_ingesta_ctas_copy_into</b>, conéctalo a <b>Serverless</b> y ejecuta la primera celda de código, que fija el catálogo y el schema:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>USE CATALOG lab0501;
+USE SCHEMA bronze;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0501</code> y <code>schema = bronze</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Ejecuta las celdas del apartado <b>1 · Explorar los ficheros</b>. La primera lista la carpeta:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>LIST &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro filas, una por fichero <code>part-0000X.snappy.parquet</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>La siguiente consulta lee el Parquet directamente, sin crear ninguna tabla:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM parquet.`/Volumes/lab0501/upload/upload/users-historical`
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Diez filas con tres columnas: <code>user_id</code>, <code>user_first_touch_timestamp</code> (un número grande) y <code>email</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Ahora con <code>read_files</code>, la forma recomendada de leer ficheros desde SQL:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+    &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;,
+    format =&gt; &#x27;parquet&#x27;
+)
+LIMIT 10;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>_rescued_data</code> recoge los datos que no encajan en el esquema inferido. Que la columna exista no significa que haya errores: aquí está vacía.</div><div class="cal ok"><b class="etq">Deberías ver</b>Las mismas tres columnas y una cuarta, <code>_rescued_data</code>, con <code>NULL</code> en todas las filas.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Cuenta las filas del origen:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT count(*) AS filas
+FROM read_files(&#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;, format =&gt; &#x27;parquet&#x27;);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>251501</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>LIST</code> falla con <i>does not exist</i>, el volumen está vacío o no existe: vuelve a ejecutar <code>00_preparar_entorno</code>. Si sigue sin funcionar, salta al bloque 2: el CTAS te dirá igualmente si los datos están.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Cargar el histórico con CTAS<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b><b>CTAS</b> es <code>CREATE TABLE AS SELECT</code>: crear una tabla con el resultado de una consulta. Hasta ahora solo leías los ficheros; esto escribe los datos en una tabla Delta propia, independiente del volumen.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Ejecuta la celda del apartado <b>2 · Cargar el histórico con CTAS</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REPLACE TABLE historical_users_bronze_ctas_rf
+USING DELTA
+AS SELECT *
+FROM read_files(
+    &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;,
+    format =&gt; &#x27;parquet&#x27;
+);
+
+SELECT count(*) AS filas
+FROM historical_users_bronze_ctas_rf;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>CREATE OR REPLACE</code> permite repetir la celda: cada vez reconstruye la tabla entera desde los ficheros.</div><div class="cal ok"><b class="etq">Deberías ver</b><b>251501</b> filas, las mismas que el origen.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Ejecuta la celda del apartado <b>3 · Inspeccionar qué has creado</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE TABLE EXTENDED historical_users_bronze_ctas_rf;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>En <b>Detailed Table Information</b>: <b>Type</b> = <code>MANAGED</code>, <b>Provider</b> = <code>delta</code> y una <b>Location</b> que no es la ruta del volumen.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Si mañana llega un quinto fichero a la carpeta, ¿aparece solo en la tabla? No: el CTAS se ejecutó una vez y la tabla no queda conectada a la carpeta. Para incluirlo tendrías que repetir el CTAS, que <b>recarga las 251.501 filas</b> otra vez.</div><div class="cal help"><b class="etq">Si algo falla</b>Si el CTAS falla con un error de permisos, no puedes crear tablas en <code>lab0501.bronze</code>: avisa al docente. Si sigue sin funcionar, salta al bloque 3.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>La misma carga en PySpark<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>La API de DataFrames hace lo mismo que el CTAS: leer, escribir una tabla Delta y consultarla. <code>mode("overwrite")</code> equivale al <code>CREATE OR REPLACE</code>: tampoco recuerda qué ficheros cargó.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>Ejecuta la celda del apartado <b>4 · La alternativa en PySpark</b>:</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>RUTA_ORIGEN = &quot;/Volumes/lab0501/upload/upload/users-historical&quot;
+TABLA_PYTHON = &quot;lab0501.bronze.historical_users_bronze_python&quot;
+
+df = spark.read.format(&quot;parquet&quot;).load(RUTA_ORIGEN)
+
+(df.write
+   .format(&quot;delta&quot;)
+   .mode(&quot;overwrite&quot;)
+   .saveAsTable(TABLA_PYTHON))
+
+users_bronze_table = spark.table(TABLA_PYTHON)
+users_bronze_table.printSchema()
+print(&quot;filas:&quot;, users_bronze_table.count())
+display(users_bronze_table.limit(10))</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>El esquema con tres columnas, <code>filas: 251501</code> y una muestra de diez filas. Aquí <b>no</b> aparece <code>_rescued_data</code>: es propia de <code>read_files</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si la celda falla con <i>NameError: spark</i>, el notebook no está conectado a Serverless. Si sigue sin funcionar, salta al bloque 4: no depende de esta tabla.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>COPY INTO y el error de esquema<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b><code>COPY INTO</code> carga ficheros en una tabla <b>que ya existe</b> y recuerda cuáles ha cargado. Pero la tabla manda: si los ficheros traen una columna que la tabla no tiene, la carga falla, salvo que permitas que el esquema evolucione.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Ejecuta la celda que crea una tabla con solo dos columnas:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REPLACE TABLE historical_users_bronze_ci (
+    user_id STRING,
+    user_first_touch_timestamp BIGINT
+);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>La celda termina sin resultado: la tabla está creada y vacía.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Ejecuta la celda siguiente. Intenta el <code>COPY INTO</code> y <b>falla a propósito</b>; la celda captura el error y lo muestra:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>COPY INTO historical_users_bronze_ci
+FROM &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;
+FILEFORMAT = PARQUET</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><i>Error esperado:</i> seguido de <code>COPY_INTO_SCHEMA_MISMATCH_WITH_TARGET_TABLE</code>. Los ficheros traen <code>email</code> y la tabla no tiene esa columna.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Ejecuta el <code>COPY INTO</code> con <code>mergeSchema</code>, que permite a la carga añadir columnas a la tabla:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>COPY INTO historical_users_bronze_ci
+FROM &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;
+FILEFORMAT = PARQUET
+COPY_OPTIONS (&#x27;mergeSchema&#x27; = &#x27;true&#x27;);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila de resultado con <code>num_affected_rows</code> y <code>num_inserted_rows</code> = <b>251501</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Ejecuta la consulta de muestra de la tabla:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM historical_users_bronze_ci
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Tres columnas: <code>email</code> se ha añadido sola.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Ejecuta el <b>Ejemplo 2</b>: una tabla vacía <b>sin columnas</b> que <code>mergeSchema</code> completa en la primera carga.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DROP TABLE IF EXISTS historical_users_bronze_ci_no_schema;
+
+CREATE TABLE historical_users_bronze_ci_no_schema;
+
+COPY INTO historical_users_bronze_ci_no_schema
+FROM &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;
+FILEFORMAT = PARQUET
+COPY_OPTIONS (&#x27;mergeSchema&#x27; = &#x27;true&#x27;);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>num_inserted_rows</code> = <b>251501</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el primer <code>COPY INTO</code> <b>no</b> da error, la tabla tenía ya la columna <code>email</code>: vuelve a ejecutar su <code>CREATE OR REPLACE</code> y repite. Si un <code>COPY INTO</code> inserta 0 filas a la primera, la tabla viene de una ejecución anterior: ejecuta <code>00_preparar_entorno</code> y vuelve a empezar este bloque. Si sigue sin funcionar, salta al bloque 5.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>Repetir la carga no duplica<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Una operación es <b>idempotente</b> si repetirla deja el mismo resultado. <code>COPY INTO</code> lo es porque guarda la lista de ficheros que ya cargó en cada tabla: si los vuelves a pedir, los salta.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Ejecuta otra vez el mismo <code>COPY INTO</code> (apartado <b>6 · Idempotencia</b>):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>COPY INTO historical_users_bronze_ci_no_schema
+FROM &#x27;/Volumes/lab0501/upload/upload/users-historical&#x27;
+FILEFORMAT = PARQUET
+COPY_OPTIONS (&#x27;mergeSchema&#x27; = &#x27;true&#x27;);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>num_affected_rows</code>, <code>num_inserted_rows</code> y <code>num_skipped_corrupt_files</code> a <b>0</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Cuenta las filas de la tabla:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT count(*) AS filas
+FROM historical_users_bronze_ci_no_schema;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>251501</b>, no el doble.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Revisa el historial:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE HISTORY historical_users_bronze_ci_no_schema;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una operación <code>COPY INTO</code> con <code>numOutputRows</code> = 251501 en <b>operationMetrics</b>. La segunda ejecución no escribió nada: según la versión, aparece con 0 filas o no genera versión nueva.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿Evita <code>COPY INTO</code> cualquier duplicado? No: controla <b>ficheros</b>, no claves. Si llega un fichero nuevo con un usuario que ya existía, se cargará. Quitar duplicados por clave es otra regla que se aplica aparte.</div><div class="cal help"><b class="etq">Si algo falla</b>Si la repetición inserta filas, se ha recreado la tabla entre medias: repite el paso 5 del bloque 4 y después este bloque. Si sigue sin funcionar, da el laboratorio por terminado y repasa el <b>Comprueba lo que has aprendido</b> del notebook.</div></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Sabes cargar ficheros en una tabla Bronze de tres formas y por qué <code>COPY INTO</code> no duplica al repetirse. En el laboratorio 0502 darás el siguiente paso: que la ingesta incremental se haga sola, con streaming tables y Auto Loader.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0501';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 05 · Laboratorio 2 · Streaming tables con SQL y Auto Loader</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 25 pasos completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 05 · Laboratorio 2</p>
+  <h1>Streaming tables con SQL y Auto Loader</h1>
+  <p class="sub">Creas una streaming table que ingiere los CSV de ventas de un volumen. Después llega un fichero nuevo y compruebas que el refresco carga <b>solo</b> ese fichero: 3.149 filas al principio, 2.932 nuevas, 6.081 en total. En el bloque extra haces lo mismo con Auto Loader en Python.</p>
+  <div class="meta"><span><b>5 bloques</b> · 25 pasos</span><span>Unos 35 minutos, más 15 del extra</span><span>Todo el código se copia con un clic</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Explorar el origen</a><a href="#b3"><span>2</span>Crear la streaming table</a><a href="#b4"><span>3</span>Llega un fichero nuevo</a><a href="#b5"><span>+</span>Extra: Auto Loader en Python</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso, que tienes clonado en un <b>Git folder</b>. El notebook de preparación crea el catálogo <code>lab0502</code> y deja en el volumen de entrada <b>un solo fichero</b>, <code>000.csv</code>: el segundo lo añadirás tú a mitad del laboratorio.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>. Dentro, la carpeta <b>datasets</b> y la carpeta <b>lab-0502-streaming</b>, con los notebooks <code>00_preparar_entorno</code> y <code>01_streaming_tables_auto_loader</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>La lista de los cuatro CSV con <i>ok</i> y, al final, <i>Entorno listo: /Volumes/lab0502/upload/upload contiene solo 000.csv con 3149 filas.</i></div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para con <i>No encuentro …/datasets/sales-csv</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si falla al crear el catálogo con un error de permisos, avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Explorar el origen<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Antes de crear la tabla, miras qué hay en el volumen. Los CSV de ventas van separados por <code>|</code>, no por comas: hay que decírselo al lector.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el notebook <b>01_streaming_tables_auto_loader</b>, conéctalo a <b>Serverless</b> y ejecuta la celda que fija el catálogo y el schema:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>USE CATALOG lab0502;
+USE SCHEMA streaming;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0502</code> y <code>schema = streaming</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Comprueba el volumen en la interfaz: pulsa <b>Catalog</b> en la barra lateral y despliega <b>lab0502 → upload → Volumes → upload</b>. Después ejecuta la celda <code>LIST</code> del paso 1 del notebook:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>LIST &#x27;/Volumes/lab0502/upload/upload&#x27;;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Un único fichero, <code>000.csv</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Ejecuta la vista previa del paso 2:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+  &#x27;/Volumes/lab0502/upload/upload&#x27;,
+  format =&gt; &#x27;CSV&#x27;,
+  sep =&gt; &#x27;|&#x27;,
+  header =&gt; true
+);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una tabla con <code>order_id</code>, <code>email</code>, <code>transactions_timestamp</code>… y <b>3.149 filas</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si ves una sola columna con todo el texto junto, falta <code>sep => '|'</code>. Si aparece también <code>001.csv</code>, el volumen viene de una ejecución anterior: vuelve a ejecutar <code>00_preparar_entorno</code>.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Crear la streaming table<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Una <b>streaming table</b> es una tabla de Unity Catalog que se mantiene al día de forma incremental: en cada refresco solo procesa lo nuevo. Al crearla, Databricks monta por ti un <b>pipeline serverless</b> que hace el trabajo; no consume el cómputo de tu notebook. Es la alternativa recomendada al <code>COPY INTO</code> del laboratorio 0501.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Ejecuta la celda del paso 3. Tarda alrededor de <b>un minuto</b>, porque crea y lanza el pipeline:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REFRESH STREAMING TABLE sql_csv_autoloader
+SCHEDULE EVERY 1 WEEK     -- Programar el refresco es opcional
+AS
+SELECT *
+FROM STREAM read_files(
+  &#x27;/Volumes/lab0502/upload/upload&#x27;,
+  format =&gt; &#x27;CSV&#x27;,
+  sep =&gt; &#x27;|&#x27;,
+  header =&gt; true
+);</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>STREAM</code> delante de <code>read_files</code> es lo que la hace incremental: el lector recuerda qué ficheros ha procesado. <code>SCHEDULE</code> la refrescaría sola cada semana.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Pulsa <b>Catalog</b> y despliega <b>lab0502 → streaming → Tables</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>La tabla <b>sql_csv_autoloader</b>, con un icono distinto al de una tabla normal: una tabla con unas ondas.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Ejecuta la consulta del paso 5:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM sql_csv_autoloader;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>3.149 filas</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Ejecuta el <code>DESCRIBE</code> del paso 6:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE TABLE EXTENDED sql_csv_autoloader;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>En <b>Detailed Table Information</b>, <b>Type</b> indica que es una streaming table y <b>Provider</b> = <code>delta</code>. Más abajo, <b>Refresh Information</b> con el último refresco y la programación semanal.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Ejecuta el historial del paso 7:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE HISTORY sql_csv_autoloader;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Tres operaciones: <code>CREATE TABLE</code>, <code>DLT SETUP</code> y <code>STREAMING UPDATE</code>. En <b>operationMetrics</b> del <code>STREAMING UPDATE</code>, <code>numOutputRows</code> = <b>3149</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el <code>CREATE</code> falla diciendo que el compute no admite streaming tables, el notebook no está en <b>Serverless</b>: cámbialo arriba a la derecha y repite. Si tarda más de cinco minutos, abre <b>Jobs &amp; Pipelines</b> y busca el pipeline de la tabla para ver el error. Si sigue sin funcionar, salta al bloque extra: Auto Loader en Python no depende de esta tabla.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Llega un fichero nuevo<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Aquí está la gracia de la ingesta incremental. Añades <code>001.csv</code> al volumen y refrescas: la tabla debe crecer en las 2.932 filas del fichero nuevo, sin volver a leer las 3.149 de <code>000.csv</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>Ejecuta la celda Python del paso 8, que copia <code>001.csv</code> desde la carpeta <code>datasets</code> del repositorio al volumen.</span></label><div class="cal info2"><b class="etq">Por qué esto</b>Lo mismo se puede hacer a mano: descarga el fichero y súbelo con <b>Catalog → lab0502 → upload → Volumes → upload → Upload to volume</b>. La celda evita depender de que tu portátil te deje descargar ficheros.</div><div class="cal ok"><b class="etq">Deberías ver</b><i>copiado 001.csv</i>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Ejecuta el <code>LIST</code> siguiente:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>LIST &#x27;/Volumes/lab0502/upload/upload&#x27;;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Dos ficheros: <code>000.csv</code> y <code>001.csv</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Refresca la tabla (paso 9). Tarda alrededor de un minuto:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>REFRESH STREAMING TABLE sql_csv_autoloader;</code></pre></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Ejecuta la consulta del paso 10:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM sql_csv_autoloader;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>6.081 filas</b>: 3.149 + 2.932.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Ejecuta el historial del paso 11:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE HISTORY sql_csv_autoloader;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Un segundo <code>STREAMING UPDATE</code> en la versión 3, con <code>numOutputRows</code> = <b>2932</b>. Solo se procesó el fichero nuevo.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Borra la tabla (paso 12):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DROP TABLE IF EXISTS sql_csv_autoloader;</code></pre></div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿Qué habría pasado con un CTAS como el del laboratorio 0501? Al repetirlo habría leído los dos ficheros enteros: el resultado es el mismo, 6.081 filas, pero procesando 6.081 en vez de 2.932. Con miles de ficheros, esa diferencia es el coste del pipeline.</div><div class="cal help"><b class="etq">Si algo falla</b>Si la copia falla con <i>FileNotFoundError</i>, el Git folder no tiene <code>datasets/sales-csv/001.csv</code>: haz <b>Pull</b>. Si tras el refresco la tabla sigue con 3.149 filas, comprueba con <code>LIST</code> que <code>001.csv</code> está en el volumen y refresca otra vez. Si sigue sin funcionar, salta al bloque extra.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">+</span>Extra: Auto Loader en Python<span class="min">15 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Lo que la streaming table hace por debajo lo puedes escribir tú con Structured Streaming: el formato <code>cloudFiles</code> es Auto Loader. Necesitas una carpeta de <b>checkpoint</b>, donde Auto Loader apunta qué ficheros ha procesado. Este bloque es material extra: hazlo si te sobra tiempo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Ejecuta la celda <code>%run ./00_preparar_entorno</code> del apéndice. Devuelve el volumen al estado inicial.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>El mismo mensaje del bloque 0: <i>Entorno listo … contiene solo 000.csv con 3149 filas.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Ejecuta el <code>LIST</code> del paso 1 del apéndice.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Solo <code>000.csv</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Ejecuta el stream del paso 2:</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>checkpoint_file_location = &#x27;/Volumes/lab0502/streaming/checkpoints/python_csv_autoloader&#x27;
+
+(spark
+ .readStream
+   .format(&quot;cloudFiles&quot;)
+   .option(&quot;cloudFiles.format&quot;, &quot;csv&quot;)
+   .option(&quot;header&quot;, &quot;true&quot;)
+   .option(&quot;sep&quot;, &quot;|&quot;)
+   .option(&quot;inferSchema&quot;, &quot;true&quot;)
+   .option(&quot;cloudFiles.schemaLocation&quot;, f&quot;{checkpoint_file_location}&quot;)
+   .load(&quot;/Volumes/lab0502/upload/upload/&quot;)
+ .writeStream
+   .option(&quot;checkpointLocation&quot;, f&quot;{checkpoint_file_location}&quot;)
+   .trigger(availableNow=True)
+   .toTable(&quot;lab0502.streaming.python_csv_autoloader&quot;)
+ .awaitTermination()
+)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>availableNow=True</code> procesa lo pendiente y se para. El <code>trigger(once=True)</code> de muchos tutoriales hace lo mismo, pero está deprecado y Serverless no lo admite.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Ejecuta la consulta del paso 3 sobre <code>lab0502.streaming.python_csv_autoloader</code>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>3.149 filas y <b>todas las columnas como texto</b>, aunque el código pide <code>inferSchema</code>. Auto Loader ignora esa opción; para inferir tipos se usa <code>cloudFiles.inferColumnTypes</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span>Ejecuta la copia de <code>001.csv</code> (paso 4), el <code>LIST</code> y el mismo stream otra vez (paso 5).</span></label><div class="cal ok"><b class="etq">Deberías ver</b>El <code>LIST</code> muestra dos ficheros y el stream termina sin error.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Ejecuta el recuento del paso 6 y el historial del paso 7.</span></label><div class="cal ok"><b class="etq">Deberías ver</b><b>6.081 filas</b> y dos <code>STREAMING UPDATE</code> en el historial: 3.149 filas el primero y 2.932 el segundo.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p25"><span>Borra la tabla (paso 8).</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DROP TABLE IF EXISTS lab0502.streaming.python_csv_autoloader;</code></pre></div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el stream falla con <i>trigger type not supported</i>, la celda usa <code>once=True</code>: cámbialo por <code>availableNow=True</code>. Si el segundo stream no carga nada, comprueba que <code>001.csv</code> está en el volumen. Si sigue sin funcionar, no pasa nada: es material extra y el laboratorio está completo con los bloques anteriores.</div></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Tienes una tabla que se pone al día sola con los ficheros nuevos, sin recargar los anteriores. En el laboratorio 0503 añadirás a la tabla Bronze de dónde viene cada fila y cuándo se cargó.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0502';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>

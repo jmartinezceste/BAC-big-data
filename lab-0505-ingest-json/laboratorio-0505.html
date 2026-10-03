@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 05 · Laboratorio 5 · Ingesta de ficheros JSON</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 24 pasos completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 05 · Laboratorio 5</p>
+  <h1>Ingesta de ficheros JSON</h1>
+  <p class="sub">Ingieres 2.252 eventos de Kafka exportados a JSON. Primero decodificas su contenido, que llega en Base64; después guardas el mismo JSON de tres formas —como texto, como STRUCT y como VARIANT— y comparas cómo se consulta cada una. Por el camino, conviertes un array en filas con <code>explode</code>.</p>
+  <div class="meta"><span><b>7 bloques</b> · 24 pasos</span><span>Unos 55 minutos, más 7 del extra</span><span>Todo el código se copia con un clic</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Leer el JSON y guardarlo en bruto</a><a href="#b3"><span>2</span>Decodificar el Base64</a><a href="#b4"><span>3</span>El JSON como texto</a><a href="#b5"><span>4</span>El JSON como STRUCT y explode</a><a href="#b6"><span>5</span>El JSON como VARIANT</a><a href="#b7"><span>+</span>Extra: el JSON cambia</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso, que tienes clonado en un <b>Git folder</b>. El notebook de preparación crea el catálogo <code>lab0505</code> y copia los ficheros de eventos al volumen.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>. Dentro, la carpeta <b>datasets</b> y la carpeta <b>lab-0505-ingest-json</b>, con los notebooks <code>00_preparar_entorno</code> y <code>01_ingesta_json</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Los cuatro ficheros con <i>ok</i> y, al final, <i>Entorno listo: …/events-kafka contiene 2252 eventos.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el panel <b>Environment</b>, a la derecha del notebook, y comprueba la <b>Environment version</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Versión <b>2 o superior</b>. La sección de VARIANT no funciona en la versión 1: si es tu caso, cámbiala en ese mismo panel y pulsa <b>Apply</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para con <i>No encuentro …/datasets/events-kafka</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si falla al crear el catálogo con un error de permisos, avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Leer el JSON y guardarlo en bruto<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Cada línea de los ficheros es un mensaje de Kafka: un <b>sobre</b> con seis campos (<code>key</code>, <code>offset</code>, <code>partition</code>, <code>timestamp</code>, <code>topic</code> y <code>value</code>). El evento de verdad viaja dentro de <code>value</code>, codificado en Base64. A diferencia del CSV, con JSON no hay que indicar separador ni cabecera.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Abre el notebook <b>01_ingesta_json</b>, conéctalo a <b>Serverless</b> y ejecuta la celda que fija el catálogo y el schema:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>USE CATALOG lab0505;
+USE SCHEMA bronze;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0505</code> y <code>schema = bronze</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Ejecuta el <code>LIST</code> y la lectura como texto del apartado <b>B1</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM text.`/Volumes/lab0505/upload/upload/events-kafka`
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Dos ficheros en el <code>LIST</code>. En la lectura, una columna <code>value</code> con cinco líneas JSON, cada una con los seis campos del sobre.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Ejecuta la lectura con <code>read_files</code> (paso 3 de B1):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+  &quot;/Volumes/lab0505/upload/upload/events-kafka&quot;,
+  format =&gt; &quot;json&quot;
+)
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una columna por campo del sobre más <code>_rescued_data</code>. <code>key</code> y <code>value</code> son textos ilegibles, como <code>VUEwMDAwMDAwMDAwMDAwMA==</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Ejecuta el CTAS del apartado <b>B2</b> y el recuento siguiente:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REPLACE TABLE kafka_events_bronze_raw AS
+SELECT *
+FROM read_files(
+  &quot;/Volumes/lab0505/upload/upload/events-kafka&quot;,
+  format =&gt; &quot;json&quot;
+);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>2.252 eventos</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento no es 2.252, el volumen no está como al principio: vuelve a ejecutar <code>00_preparar_entorno</code> y el CTAS. Si sigue sin funcionar, salta al bloque 2.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Decodificar el Base64<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Kafka transporta los mensajes como bytes, y al exportarlos a JSON se codifican en Base64 para que quepan en un texto. Deshacerlo tiene dos pasos: <code>unbase64()</code> devuelve los bytes (BINARY) y <code>cast(… AS STRING)</code> los convierte en texto.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Ejecuta la celda con <code>unbase64</code> (apartado <b>B3</b>, paso 1).</span></label><div class="cal ok"><b class="etq">Deberías ver</b><code>decoded_key</code> y <code>decoded_value</code> de tipo <b>BINARY</b>: todavía no se leen.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Ejecuta la celda con <code>cast</code> (paso 2):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  key AS encoded_key,
+  cast(unbase64(key) AS STRING) AS decoded_key,
+  value AS encoded_value,
+  cast(unbase64(value) AS STRING) AS decoded_value
+FROM kafka_events_bronze_raw
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>decoded_key</code> legible (un identificador como <code>UA00000000000000</code>, el mismo que el <code>user_id</code>) y <code>decoded_value</code> como texto JSON: <code>{"device":"Chrome","ecommerce":{…},…}</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Ejecuta el CTAS de <b>kafka_events_bronze_decoded</b> (paso 3).</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Seis columnas, ya legibles. Sigue habiendo 2.252 filas: decodificar no añade ni quita eventos.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>decoded_value</code> sale como bytes y no como texto, falta el <code>cast(… AS STRING)</code>. Si sigue sin funcionar, salta al bloque 3.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>El JSON como texto<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>La forma más simple: dejar el JSON como STRING y sacar campos con <code>:</code>, como hiciste con <code>_rescued_data:_c0</code> en el laboratorio 0504. Es flexible, pero <b>todo lo que sale es texto</b>, también los objetos y arrays anidados.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>Ejecuta la consulta del apartado <b>C1.1</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  decoded_value,
+  decoded_value:device,
+  decoded_value:traffic_source,
+  decoded_value:geo,
+  decoded_value:items
+FROM kafka_events_bronze_decoded
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro columnas nuevas, todas STRING. <code>geo</code> es un texto como <code>{"city":"Madrid","state":"MD"}</code> e <code>items</code> probablemente <code>[]</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Ejecuta la consulta filtrada por compras, justo debajo.</span></label><div class="cal info2"><b class="etq">Por qué esto</b>Solo las compras llevan artículos. El 87 % de los eventos son <code>page_view</code>, <code>view_item</code> o <code>add_to_cart</code>, con <code>items</code> vacío.</div><div class="cal ok"><b class="etq">Deberías ver</b>Cinco compras (<code>finalize</code>) con su ciudad e <code>items</code> como un texto con el array de artículos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Ejecuta el CTAS de <b>kafka_events_bronze_string_flattened</b> (paso 2).</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Nueve columnas: las cinco del sobre más <code>device</code>, <code>traffic_source</code>, <code>geo</code> e <code>items</code>, todas STRING.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si una columna sale vacía, revisa la ruta: el nombre del campo va justo detrás de <code>:</code>, sin espacios. Si sigue sin funcionar, salta al bloque 4.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>El JSON como STRUCT y explode<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Un STRUCT es un JSON con <b>esquema fijo</b>: cada campo tiene su tipo. Para crearlo, primero obtienes el esquema con <code>schema_of_json()</code> y después lo aplicas con <code>from_json()</code>. Con el array <code>items</code> ya tipado puedes convertir cada artículo en una fila con <code>explode()</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Ejecuta <code>schema_of_json</code> (apartado <b>C2.1</b>, paso 1).</span></label><div class="cal info2"><b class="etq">Por qué esto</b>Se aplica a una compra con todos los campos rellenos. Con un evento de <code>items</code> vacío o con campos a <code>null</code>, el esquema saldría incompleto o con tipos equivocados.</div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con un texto largo que empieza por <code>STRUCT&lt;device: STRING, ecommerce: STRUCT&lt;…</code> y contiene <code>items: ARRAY&lt;STRUCT&lt;coupon: STRING, …</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Ejecuta el CTAS con <code>from_json</code> (paso 2).</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Seis columnas, la última, <code>value</code>, de tipo STRUCT: puedes desplegarla y ver <code>ecommerce</code>, <code>geo</code> e <code>items</code> dentro.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Ejecuta la consulta del apartado <b>C2.2</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  decoded_key,
+  value.device as device,
+  value.geo.city as city,
+  value.items as items,
+  array_size(items) AS number_elements_in_array
+FROM kafka_events_bronze_struct
+ORDER BY number_elements_in_array DESC;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Arriba, 103 compras de 3 artículos; luego 197 de 1, 1.902 eventos con 0 y, al final, 50 con <code>NULL</code> (los que traen <code>items: null</code>).</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Ejecuta el CTAS con <code>explode</code> (apartado <b>C2.3</b>).</span></label><div class="cal ok"><b class="etq">Deberías ver</b><b>506 filas</b>: una por artículo. Cada compra de 3 artículos aparece 3 veces con un <code>item_in_array</code> distinto.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Ejecuta la comparación de recuentos:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  (SELECT count(*) FROM (SELECT explode(value.items) FROM kafka_events_bronze_struct))       AS filas_explode,
+  (SELECT count(*) FROM (SELECT explode_outer(value.items) FROM kafka_events_bronze_struct)) AS filas_explode_outer;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>filas_explode</code> = <b>506</b> y <code>filas_explode_outer</code> = <b>2.458</b>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿De dónde salen las 1.952 filas de diferencia? Son los eventos sin artículos: <code>explode()</code> no genera filas para un array vacío o nulo, y <code>explode_outer()</code> genera una con <code>NULL</code> para cada uno. Si pierdes esos eventos al explotar, también pierdes sus visitas.</div><div class="cal help"><b class="etq">Si algo falla</b>Si el CTAS con <code>from_json</code> da error, el esquema pegado está incompleto: copia la celda de nuevo desde el notebook original. Si sigue sin funcionar, salta al bloque 5.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>El JSON como VARIANT<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>VARIANT guarda el JSON con su estructura y sin esquema fijo: no hay que calcular ni pegar nada, y aun así se consulta rápido. Con <code>:</code> obtienes otro VARIANT, y con <code>::</code> lo conviertes al tipo que quieras.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Ejecuta la consulta del paso 1 de la sección <b>D</b> y después el CTAS con <code>parse_json</code> (paso 2).</span></label><div class="cal ok"><b class="etq">Deberías ver</b>La tabla <b>kafka_events_bronze_variant</b> con una columna <code>json_variant_value</code> de tipo <b>VARIANT</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Ejecuta la consulta del paso 3:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  json_variant_value,
+  json_variant_value:device :: STRING,
+  json_variant_value:items
+FROM kafka_events_bronze_variant
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>device</code> como STRING (<code>Chrome</code>, <code>Linux</code>…) e <code>items</code> como VARIANT.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Mismo campo, tres formas: <code>decoded_value:device</code> devuelve siempre texto; <code>value.device</code>, el tipo del esquema que pegaste; <code>json_variant_value:device</code>, un VARIANT que conviertes con <code>::</code>.</div><div class="cal help"><b class="etq">Si algo falla</b>Si <code>parse_json</code> da un error de tipo no soportado, tu entorno Serverless es la versión 1: cámbialo en el panel <b>Environment</b>. Si sigue sin funcionar, salta al bloque extra.</div></ol></section><section class="bloque" id="b7"><h2><span class="num">+</span>Extra: el JSON cambia<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>La gran pega del STRUCT es que el esquema es fijo. <code>00_preparar_entorno</code> dejó en <code>events-kafka-extra/</code> dos ficheros más recientes, y algunos de sus eventos traen un campo nuevo, <code>campaign</code>. Aquí ves qué pasa con él en cada formato.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span>Ejecuta el recuento de la <b>Extensión opcional</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b><code>eventos</code> = 1.100 y <code>con_campaign</code> = <b>367</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Ejecuta la comparación STRUCT frente a VARIANT.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>En <code>como_struct</code> no aparece <code>campaign</code>: el esquema fijo lo ha descartado sin avisar. En <code>campaign_en_variant</code> sí, por ejemplo <code>{"channel":"social","experiment":"layout-b","id":"campaign-6"}</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento da 0 eventos, la carpeta <code>events-kafka-extra</code> no existe: vuelve a ejecutar <code>00_preparar_entorno</code>. Si sigue sin funcionar, no pasa nada: es material extra y el laboratorio está completo con los bloques anteriores.</div></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Sabes llevar un JSON de Kafka desde el Base64 hasta columnas consultables, y elegir entre STRING, STRUCT y VARIANT según lo estable que sea su estructura. Con esto cierras la ingesta de ficheros del tema 05.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0505';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>

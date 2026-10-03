@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 05 · Laboratorio 4 · Ingesta de CSV y datos rescatados</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 20 pasos completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 05 · Laboratorio 4</p>
+  <h1>Ingesta de CSV y datos rescatados</h1>
+  <p class="sub">Lees unos CSV mal (a propósito), los lees bien con las opciones correctas y los cargas en una tabla Bronze. Después te enfrentas a dos ficheros defectuosos —un valor que no es un número y una cabecera incompleta— y compruebas que <code>_rescued_data</code> salva los datos en lugar de perderlos.</p>
+  <div class="meta"><span><b>5 bloques</b> · 20 pasos</span><span>Unos 50 minutos</span><span>Todo el código se copia con un clic</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Leer un CSV mal y leerlo bien</a><a href="#b3"><span>2</span>La tabla Bronze de ventas</a><a href="#b4"><span>3</span>Un valor que no es un número</a><a href="#b5"><span>4</span>Una cabecera incompleta</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso, que tienes clonado en un <b>Git folder</b>. El notebook de preparación crea el catálogo <code>lab0504</code> y copia dos carpetas al volumen: los cuatro CSV de ventas y dos CSV con defectos preparados para la demo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>. Dentro, la carpeta <b>datasets</b> y la carpeta <b>lab-0504-ingest-csv-rescued-data</b>, con los notebooks <code>00_preparar_entorno</code> y <code>01_ingesta_csv_rescued_data</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Los cuatro CSV de ventas con sus filas, los dos ficheros con defectos marcados <i>ok</i> y, al final, <i>Entorno listo: … contiene sales-csv/ (12484 filas) y csv-demo-files/ (2 ficheros).</i></div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para con <i>No encuentro …/datasets</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si dice <i>DEFECTO ALTERADO</i>, alguien ha abierto y guardado un fichero de <code>csv-demo-files</code> con otra herramienta: vuelve a descargarlo del repositorio. Si falla al crear el catálogo con un error de permisos, avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Leer un CSV mal y leerlo bien<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Un CSV es solo texto: el lector necesita saber qué separa las columnas y si la primera línea es la cabecera. Con las opciones por defecto (<code>,</code> y sin cabecera) estos ficheros, que usan <code>|</code>, se leen mal. Verlo fallar primero ayuda a entender para qué sirve cada opción.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el notebook <b>01_ingesta_csv_rescued_data</b>, conéctalo a <b>Serverless</b> y ejecuta la celda que fija el catálogo y el schema:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>USE CATALOG lab0504;
+USE SCHEMA bronze;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0504</code> y <code>schema = bronze</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Ejecuta el <code>LIST</code> del apartado <b>B1</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>LIST &#x27;/Volumes/lab0504/upload/upload/sales-csv&#x27;;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro ficheros: <code>000.csv</code> a <code>003.csv</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Ejecuta la consulta directa por ruta (paso 2 de B1):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM csv.`/Volumes/lab0504/upload/upload/sales-csv`
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Columnas sin nombre (<code>_c0</code>…) con trozos de línea llenos de <code>|</code> y comillas, y la cabecera <code>"order_id"|"email"|…</code> como si fuera un dato.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Ejecuta <code>read_files</code> con las opciones por defecto (paso 3):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/sales-csv&#x27;,
+        format =&gt; &quot;csv&quot;
+      )
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>El mismo problema: <code>_c0</code>, <code>_c1</code>… y la cabecera como fila de datos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Ejecuta <code>read_files</code> con las opciones de CSV (apartado <b>B2</b>, paso 1):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/sales-csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true
+      )
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Siete columnas con nombre (<code>order_id</code>, <code>email</code>, …, <code>items</code>) y una octava, <code>_rescued_data</code>, vacía (<code>NULL</code>): estos ficheros no tienen errores.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si en el último paso sigues viendo una sola columna, revisa que <code>sep</code> sea <code>"|"</code> y no <code>","</code>. Si sigue sin funcionar, salta al bloque 2.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>La tabla Bronze de ventas<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Con las opciones correctas, un CTAS carga los cuatro CSV en una tabla Delta. Le añades la hora de la carga y el fichero de origen, como en el laboratorio 0503. Como no le das esquema, <code>read_files</code> lo <b>infiere</b>: mira qué tipos elige.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Ejecuta el CTAS del paso 2 de B2:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REPLACE TABLE sales_bronze AS
+SELECT
+  *,
+  _metadata.file_modification_time AS file_modification_time,
+  _metadata.file_name AS source_file,
+  current_timestamp() as ingestion_time
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/sales-csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true
+      );</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una muestra de diez filas con las columnas de los CSV más <code>file_modification_time</code>, <code>source_file</code> e <code>ingestion_time</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Ejecuta el recuento por fichero:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT source_file, count(*) AS filas
+FROM sales_bronze
+GROUP BY source_file
+ORDER BY source_file;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>000.csv</code> 3.149, <code>001.csv</code> 2.932, <code>002.csv</code> 3.200 y <code>003.csv</code> 3.203: <b>12.484</b> en total.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Ejecuta el <code>DESCRIBE</code> del paso 3:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>DESCRIBE TABLE EXTENDED sales_bronze;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>order_id</code> INT, <code>transactions_timestamp</code> BIGINT, <code>purchase_revenue_in_usd</code> DOUBLE y <code>items</code> STRING (algún tipo numérico puede variar).</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b><code>items</code> contiene JSON, pero llega como texto, y el importe como DOUBLE en lugar de decimal. La inferencia acierta <i>suficiente</i>, no necesariamente lo que quieres. Por eso en el bloque 3 fijarás tú el esquema.</div><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span><b>Bonus:</b> ejecuta la celda Python del apartado <b>B3</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Las mismas siete columnas y <code>_rescued_data</code>. Con <code>spark.read</code> esa columna no sale sola: la pide la opción <code>rescuedDataColumn</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento no da 12.484, el volumen está incompleto: vuelve a ejecutar <code>00_preparar_entorno</code> y el CTAS. Si sigue sin funcionar, salta al bloque 3: no depende de esta tabla.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Un valor que no es un número<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b><code>malformed_example_1_data.csv</code> tiene un <code>transactions_timestamp</code> que vale <code>aaa</code>. Si dejas que se infiera el esquema, una sola fila mala convierte toda la columna en texto. Si fijas el esquema, la columna es BIGINT y la fila mala no se pierde: su valor original va a <code>_rescued_data</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Explora la carpeta: <b>Catalog → lab0504 → upload → Volumes → upload → csv-demo-files</b>. Después ejecuta el <code>LIST</code> de la sección <b>C</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>LIST &#x27;/Volumes/lab0504/upload/upload/csv-demo-files&#x27;;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Clic derecho sobre un fichero o carpeta del volumen → <b>Copy volume path</b> te copia la ruta para pegarla en una consulta.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>malformed_example_1_data.csv</code> y <code>malformed_example_2_data.csv</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Mira el fichero como texto (apartado <b>C1</b>, paso 1):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM text.`/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_1_data.csv`;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una columna, <code>value</code>, con 5 filas: la cabecera <code>order_id|email|transactions_timestamp</code> y cuatro pedidos. El primero termina en <code>|aaa</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Léelo con <code>read_files</code> sin esquema (paso 2):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_1_data.csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true
+      );</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>4 filas, y <code>transactions_timestamp</code> como <b>STRING</b>: el <code>aaa</code> ha impedido que se infiera como número.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Léelo con esquema explícito y <code>rescuedDataColumn</code> (paso 3):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_1_data.csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true,
+        schema =&gt; &#x27;&#x27;&#x27;
+            order_id INT,
+            email STRING,
+            transactions_timestamp BIGINT&#x27;&#x27;&#x27;,
+        rescuedDataColumn =&gt; &#x27;_rescued_data&#x27;
+      );</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>4 filas. La del pedido <code>298592</code> tiene <code>transactions_timestamp</code> a <code>NULL</code> y el <code>aaa</code> dentro de <code>_rescued_data</code>; las otras tres, su timestamp y <code>_rescued_data</code> a <code>NULL</code>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿Por qué aquí hay que pedir <code>rescuedDataColumn</code>? Con el esquema inferido, <code>read_files</code> añade <code>_rescued_data</code> sola; con un esquema explícito, no. Sin la opción, el <code>aaa</code> desaparecería sin avisar y solo quedaría un <code>NULL</code>.</div><div class="cal help"><b class="etq">Si algo falla</b>Si la última consulta falla con un error de sintaxis, revisa las tres comillas simples <code>'''</code> que abren y cierran el esquema. Si sigue sin funcionar, salta al bloque 4.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>Una cabecera incompleta<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>A <code>malformed_example_2_data.csv</code> le falta el nombre de la primera columna en la cabecera. Los datos están bien, pero sin nombre la columna no puede ser una columna normal: Databricks la rescata entera y la guarda con la clave <code>_c0</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Mira el fichero como texto (apartado <b>C2</b>, paso 1):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT *
+FROM text.`/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_2_data.csv`;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>5 filas en <code>value</code>. La primera es <code>|email|transactions_timestamp</code>: empieza por la barra, sin nombre delante.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Crea la tabla con el fichero (paso 2):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>CREATE OR REPLACE TABLE demo_4_example_2_bronze AS
+SELECT *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_2_data.csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true
+      );
+
+SELECT *
+FROM demo_4_example_2_bronze;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Las columnas <code>email</code>, <code>transactions_timestamp</code> y <code>_rescued_data</code>, sin <code>order_id</code>. En <code>_rescued_data</code>, algo como <code>{"_c0":"298592","_file_path":"…/malformed_example_2_data.csv"}</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Recupera la columna con la sintaxis <code>:</code> (paso 3):</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>SELECT
+  cast(_rescued_data:_c0 AS BIGINT) AS order_id,
+  *
+FROM read_files(
+        &#x27;/Volumes/lab0504/upload/upload/csv-demo-files/malformed_example_2_data.csv&#x27;,
+        format =&gt; &quot;csv&quot;,
+        sep =&gt; &quot;|&quot;,
+        header =&gt; true
+      );</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>:</code> extrae un campo de un texto JSON y siempre devuelve texto; por eso el <code>cast</code> a BIGINT.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>order_id</code> como primera columna, con los pedidos 298592 a 298595. El valor sigue también dentro de <code>_rescued_data</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si en el paso 2 ves una columna <code>order_id</code> normal, el fichero no tiene el defecto: vuelve a ejecutar <code>00_preparar_entorno</code>, que lo comprueba. Si sigue sin funcionar, da el laboratorio por terminado y repasa el <b>Comprueba lo que has aprendido</b> del notebook.</div></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Sabes leer un CSV con las opciones correctas, fijar su esquema y recuperar lo que no encaja en vez de perderlo. En el laboratorio de JSON aprenderás a abrir textos como <code>_rescued_data</code> o <code>items</code> y convertirlos en columnas.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0504';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>
