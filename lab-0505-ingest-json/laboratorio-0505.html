@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tema 05 · Laboratorio 5 · Ingesta de ficheros JSON</title>
+<title>Tema 05 · Laboratorio 5 · Ingesta de ficheros JSON de Kafka</title>
 <style>
 :root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
  --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
@@ -103,6 +103,20 @@ tbody tr:nth-child(even){background:#fbfcfd}
 .fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
  text-align:center;color:var(--muted);font-size:14.5px}
 .fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+.json{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px 16px;margin:12px 0;
+ font:12.5px/1.6 Consolas,"SF Mono",Menlo,monospace;overflow-x:auto;white-space:pre}
+.json .k{color:#93c5fd} .json .s{color:#86efac} .json .n{color:#fcd34d} .json .c{color:#7c8ba1}
+.tag{display:inline-block;margin-left:10px;padding:0 8px;border-radius:10px;
+ font:600 11px/18px "Segoe UI",system-ui,sans-serif;vertical-align:1px}
+.tag.st{background:#1d4ed8;color:#fff} .tag.ar{background:#7e22ce;color:#fff}
+.tag.es{background:#475569;color:#fff} .tag.b64{background:#b45309;color:#fff}
+.tag.ok{background:var(--ok);color:#fff}
+.flujo{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0 18px}
+.flujo .caja{flex:1 1 150px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;
+ font-size:13.5px;background:#fff}
+.flujo .caja b{display:block;color:var(--acc);margin-bottom:3px}
+.flujo .caja.on{border-color:var(--acc);background:var(--acc-soft)}
+.flujo .flecha{align-self:center;color:var(--muted);font-size:18px}
 #lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
  place-items:center;z-index:99;cursor:zoom-out;padding:24px}
 #lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
@@ -113,57 +127,82 @@ tbody tr:nth-child(even){background:#fbfcfd}
 </head>
 <body>
 <div id="top"><div id="bar"></div><div id="topin">
-  <span><b id="hechos">0</b> de 24 pasos completados</span>
+  <span><b id="hechos">0</b> de 25 pasos completados</span>
   <button id="reset">Empezar de cero</button>
 </div></div>
 <div class="wrap">
 <header class="hero">
   <p class="kicker">Tema 05 · Laboratorio 5</p>
-  <h1>Ingesta de ficheros JSON</h1>
-  <p class="sub">Ingieres 2.252 eventos de Kafka exportados a JSON. Primero decodificas su contenido, que llega en Base64; después guardas el mismo JSON de tres formas —como texto, como STRUCT y como VARIANT— y comparas cómo se consulta cada una. Por el camino, conviertes un array en filas con <code>explode</code>.</p>
-  <div class="meta"><span><b>7 bloques</b> · 24 pasos</span><span>Unos 55 minutos, más 7 del extra</span><span>Todo el código se copia con un clic</span></div>
+  <h1>Ingesta de ficheros JSON de Kafka</h1>
+  <p class="sub">Llegan 2.252 eventos de una web exportados desde Kafka. Primero abres el sobre (el contenido viene en Base64) y después te enfrentas a la pregunta de verdad: <b>¿cómo guardo este JSON?</b> Lo pruebas de tres formas —texto, STRUCT y VARIANT— y respondes con las tres la misma pregunta de negocio para ver qué gana y qué pierde cada una.</p>
+  <div class="meta"><span><b>9 bloques</b> · 25 pasos</span><span>Unos 75 minutos</span><span>Resultados reales de Databricks en cada paso</span></div>
 </header>
-<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Leer el JSON y guardarlo en bruto</a><a href="#b3"><span>2</span>Decodificar el Base64</a><a href="#b4"><span>3</span>El JSON como texto</a><a href="#b5"><span>4</span>El JSON como STRUCT y explode</a><a href="#b6"><span>5</span>El JSON como VARIANT</a><a href="#b7"><span>+</span>Extra: el JSON cambia</a></nav>
-<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso, que tienes clonado en un <b>Git folder</b>. El notebook de preparación crea el catálogo <code>lab0505</code> y copia los ficheros de eventos al volumen. En esta guía escribes tú el código en un <b>notebook propio</b>; el notebook <code>01_ingesta_json</code> tiene la misma demo ya montada, solo como referencia.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>. Dentro, la carpeta <b>datasets</b> y la carpeta <b>lab-0505-ingest-json</b>, con los notebooks <code>00_preparar_entorno</code> y <code>01_ingesta_json</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Los cuatro ficheros con <i>ok</i> y, al final, <i>Entorno listo: …/events-kafka contiene 2252 eventos.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el panel <b>Environment</b>, a la derecha del notebook, y comprueba la <b>Environment version</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Versión <b>2 o superior</b>. La sección de VARIANT no funciona en la versión 1: si es tu caso, cámbiala en ese mismo panel y pulsa <b>Apply</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para con <i>No encuentro …/datasets/events-kafka</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si falla al crear el catálogo con un error de permisos, avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Leer el JSON y guardarlo en bruto<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Cada línea de los ficheros es un mensaje de Kafka: un <b>sobre</b> con seis campos (<code>key</code>, <code>offset</code>, <code>partition</code>, <code>timestamp</code>, <code>topic</code> y <code>value</code>). El evento de verdad viaja dentro de <code>value</code>, codificado en Base64. A diferencia del CSV, con JSON no hay que indicar separador ni cabecera.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Dentro de la carpeta <b>lab-0505-ingest-json</b>, pulsa <b>Create → Notebook</b> y crea un notebook nuevo (por ejemplo, <code>mi_lab_0505</code>). Conéctalo a <b>Serverless</b> y, en el panel <b>Environment</b>, comprueba que la versión es <b>2 o superior</b> (como en el bloque 0). Después ejecuta la celda que fija el catálogo y el schema:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Qué llega de Kafka</a><a href="#b3"><span>2</span>Paso 1 · Abrir el sobre</a><a href="#b4"><span>3</span>Paso 2 · ¿Cómo guardo este JSON?</a><a href="#b5"><span>4</span>Opción STRING: dejarlo como texto</a><a href="#b6"><span>5</span>Opción STRUCT: darle una forma fija</a><a href="#b7"><span>6</span>Opción VARIANT: forma flexible</a><a href="#b8"><span>7</span>La misma pregunta, tres formatos</a><a href="#b9"><span>8</span>El JSON cambia: por qué existe VARIANT</a></nav>
+
+<div class="cal info" style="margin-top:0"><b class="etq">El laboratorio en un vistazo</b>
+Son <b>dos pasos distintos</b>, y conviene no mezclarlos. El primero es obligatorio
+y solo tiene una forma de hacerse. El segundo es una decisión de diseño.</div>
+<div class="flujo">
+  <div class="caja"><b>Fichero de Kafka</b>Cada línea es un <i>sobre</i>: offset,
+    partition, timestamp, topic… y el evento dentro de <code>value</code>, en Base64.</div>
+  <div class="flecha">→</div>
+  <div class="caja on"><b>Paso 1 · Abrir el sobre</b><code>unbase64</code> +
+    <code>cast</code>. Obligatorio, siempre igual. Sale un texto JSON.</div>
+  <div class="flecha">→</div>
+  <div class="caja on"><b>Paso 2 · ¿Cómo guardo el JSON?</b>
+    <span class="tag es" style="margin:2px 4px 0 0">STRING</span>
+    <span class="tag st" style="margin:2px 4px 0 0">STRUCT</span>
+    <span class="tag ar" style="margin:2px 0 0 0">VARIANT</span><br>
+    Aquí sí eliges: es el tema del laboratorio.</div>
+</div>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los datos y los notebooks del laboratorio vienen en el repositorio del curso, que tienes clonado en un <b>Git folder</b>. El notebook de preparación crea el catálogo <code>lab0505</code> y copia los ficheros de eventos al volumen.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>, con la carpeta <b>datasets</b> y la carpeta <b>lab-0505-ingest-json</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Los cuatro ficheros con <i>ok</i> y, al final, <i>Entorno listo: …/events-kafka contiene 2252 eventos.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el panel <b>Environment</b>, a la derecha del notebook, y comprueba la <b>Environment version</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Versión <b>2 o superior</b>. VARIANT no funciona en la versión 1: si es tu caso, cámbiala en ese panel y pulsa <b>Apply</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> se para con <i>No encuentro …/datasets/events-kafka</i>, tu Git folder no está actualizado: haz <b>Pull</b> como en el paso 1. Si falla al crear el catálogo con un error de permisos, avisa al docente. Si sigue sin funcionar, pide al docente el catálogo ya preparado y salta al bloque 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Qué llega de Kafka<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Kafka transporta <b>bytes</b>, no texto. Al exportar sus mensajes a un fichero, cada uno queda como un <b>sobre</b> con seis campos. Cinco son metadatos de Kafka (de qué partición viene, en qué posición, cuándo…). El sexto, <code>value</code>, es el evento de la web, y viene <b>en Base64</b>: un texto ilegible que codifica esos bytes.</div>
+<p style="margin:0 0 6px"><b>Un sobre de Kafka</b>: la primera línea de <code>000.json</code>.</p>
+<div class="json"><span class="c">{</span>
+  <span class="k">"key"</span>: <span class="s">"VUEwMDAwMDAwMDAwMDAwMA=="</span>,<span class="tag b64">Base64 · el usuario</span>
+  <span class="k">"offset"</span>: <span class="n">0</span>,<span class="tag es">número · posición en la partición</span>
+  <span class="k">"partition"</span>: <span class="n">0</span>,<span class="tag es">número · partición de Kafka</span>
+  <span class="k">"timestamp"</span>: <span class="n">1596240000000</span>,<span class="tag es">número · milisegundos</span>
+  <span class="k">"topic"</span>: <span class="s">"clickstream"</span>,<span class="tag es">texto · nombre del topic</span>
+  <span class="k">"value"</span>: <span class="s">"eyJkZXZpY2UiOiJDaHJvbWUiLCJlY29tbWVyY2Ui…"</span><span class="tag b64">Base64 · EL EVENTO</span>
+<span class="c">}</span></div>
+<div class="cal warn" style="margin-bottom:20px"><b class="etq">Fíjate en esto</b>
+<code>offset</code>, <code>partition</code> y <code>timestamp</code> ya son números en el
+fichero: <code>read_files</code> los leerá como BIGINT. Lo que vas a decodificar y
+transformar en este laboratorio es solo lo que hay <b>dentro</b> de
+<code>value</code>.</div>
+<ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Abre el notebook <b>01_ingesta_json</b>, conéctalo a <b>Serverless</b> y ejecuta la celda que fija el catálogo y el schema.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 USE CATALOG lab0505;
 USE SCHEMA bronze;
 
-SELECT current_catalog() AS catalogo, current_schema() AS schema;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0505</code> y <code>schema = bronze</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Lista la carpeta y lee los ficheros como texto:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Listar los ficheros del volumen
-LIST &#x27;/Volumes/lab0505/upload/upload/events-kafka&#x27;;</code></pre></div><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+SELECT current_catalog() AS catalogo, current_schema() AS schema;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con <code>catalogo = lab0505</code> y <code>schema = bronze</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Lista los ficheros que dejó el notebook de preparación en el volumen.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIST &#x27;/Volumes/lab0505/upload/upload/events-kafka&#x27;;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Dos ficheros, <code>000.json</code> y <code>001.json</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Léelos como texto plano, sin interpretar el JSON.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT *
 FROM text.`/Volumes/lab0505/upload/upload/events-kafka`
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Dos ficheros en el <code>LIST</code>. En la lectura, una columna <code>value</code> con cinco líneas JSON, cada una con los seis campos del sobre.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Léelos con <code>read_files</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
-SELECT *
-FROM read_files(
-  &quot;/Volumes/lab0505/upload/upload/events-kafka&quot;,
-  format =&gt; &quot;json&quot;
-)
-LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una columna por campo del sobre más <code>_rescued_data</code>. <code>key</code> y <code>value</code> son textos ilegibles, como <code>VUEwMDAwMDAwMDAwMDAwMA==</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Guarda los eventos en bruto con un CTAS y cuéntalos:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una sola columna <code>value</code>: cada fila es un sobre entero, sin separar.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>Lee los ficheros con <code>read_files</code> (paso 3 de B1) y guárdalos en la tabla <b>kafka_events_bronze_raw</b> (apartado <b>B2</b>).</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE kafka_events_bronze_raw AS
 SELECT *
 FROM read_files(
   &quot;/Volumes/lab0505/upload/upload/events-kafka&quot;,
   format =&gt; &quot;json&quot;
-);</code></pre></div><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
-SELECT count(*) AS eventos
-FROM kafka_events_bronze_raw;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>2.252 eventos</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento no es 2.252, el volumen no está como al principio: vuelve a ejecutar <code>00_preparar_entorno</code> y el CTAS. Si sigue sin funcionar, salta al bloque 2.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Decodificar el Base64<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Kafka transporta los mensajes como bytes, y al exportarlos a JSON se codifican en Base64 para que quepan en un texto. Deshacerlo tiene dos pasos: <code>unbase64()</code> devuelve los bytes (BINARY) y <code>cast(… AS STRING)</code> los convierte en texto.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Decodifica <code>key</code> y <code>value</code> con <code>unbase64</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Decodificar el Base64
+);
+
+SELECT *
+FROM kafka_events_bronze_raw
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>El sobre ya está separado en columnas, pero el contenido sigue cerrado. Así lo devolvió Databricks:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>key</th><th>offset</th><th>partition</th><th>timestamp</th><th>topic</th><th>value</th><th>_rescued_data</th></tr></thead><tbody><tr><td><code>VUEwMDAwMDAwMDAwMDAwMA==</code></td><td><code>0</code></td><td><code>0</code></td><td><code>1596240000000</code></td><td><code>clickstream</code></td><td><code>eyJkZXZpY2UiOiJDaHJvbWUiLCJl…</code></td><td><code>null</code></td></tr><tr><td><code>VUEwMDAwMDAwMDAwMDAwMQ==</code></td><td><code>0</code></td><td><code>1</code></td><td><code>1596240017311</code></td><td><code>clickstream</code></td><td><code>eyJkZXZpY2UiOiJTYWZhcmkiLCJl…</code></td><td><code>null</code></td></tr></tbody></table></div>Y el recuento de la tabla: <b>2.252 eventos</b>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento no es 2.252, el volumen no está como al principio: vuelve a ejecutar <code>00_preparar_entorno</code> y el CTAS. Si sigue sin funcionar, salta al bloque 2.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Paso 1 · Abrir el sobre<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Deshacer el Base64 tiene dos movimientos: <code>unbase64()</code> recupera los <b>bytes</b> originales (tipo BINARY, todavía ilegibles) y <code>cast(… AS STRING)</code> los interpreta como texto. No hay nada que elegir aquí: con datos de Kafka siempre se hace, y siempre igual.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Aplica <code>unbase64</code> a <code>key</code> y <code>value</code>, todavía sin <code>cast</code>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   key AS encoded_key,
   unbase64(key) AS decoded_key,
   value AS encoded_value,
   unbase64(value) AS decoded_value
 FROM kafka_events_bronze_raw
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>decoded_key</code> y <code>decoded_value</code> de tipo <b>BINARY</b>: todavía no se leen.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Conviértelos en texto con <code>cast</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>decoded_key</code> y <code>decoded_value</code> de tipo <b>BINARY</b>: son los bytes, todavía no se leen. Es solo el paso intermedio.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Añade el <code>cast(… AS STRING)</code>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   key AS encoded_key,
   cast(unbase64(key) AS STRING) AS decoded_key,
   value AS encoded_value,
   cast(unbase64(value) AS STRING) AS decoded_value
 FROM kafka_events_bronze_raw
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>decoded_key</code> legible (un identificador como <code>UA00000000000000</code>, el mismo que el <code>user_id</code>) y <code>decoded_value</code> como texto JSON: <code>{"device":"Chrome","ecommerce":{…},…}</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Crea la tabla <b>kafka_events_bronze_decoded</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Crear la tabla bronze_decoded
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>El sobre abierto. Cada par muestra el antes y el después:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>encoded_key</th><th>decoded_key</th><th>decoded_value</th></tr></thead><tbody><tr><td><code>VUEwMDAwMDAwMDAwMDAwMA==</code></td><td><code>UA00000000000000</code></td><td><code>{&quot;device&quot;:&quot;Chrome&quot;,&quot;ecommerce&quot;:{&quot;purchase_revenue_in_usd&quot;:850.5,…},&quot;event_name&quot;:&quot;finalize&quot;,…,&quot;geo&quot;:{&quot;city&quot;:&quot;Madrid&quot;,…}</code></td></tr><tr><td><code>VUEwMDAwMDAwMDAwMDAwMQ==</code></td><td><code>UA00000000000001</code></td><td><code>{&quot;device&quot;:&quot;Safari&quot;,&quot;ecommerce&quot;:{&quot;purchase_revenue_in_usd&quot;:2185.2,…},&quot;event_name&quot;:&quot;finalize&quot;,…,&quot;geo&quot;:{&quot;city&quot;:&quot;Barcelona&quot;,…}</code></td></tr></tbody></table></div>La clave era el <code>user_id</code>, y el valor, el evento JSON.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Guarda el sobre abierto en la tabla <b>kafka_events_bronze_decoded</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE kafka_events_bronze_decoded AS
 SELECT
   cast(unbase64(key) AS STRING) AS decoded_key,
@@ -174,10 +213,44 @@ SELECT
   cast(unbase64(value) AS STRING) AS decoded_value
 FROM kafka_events_bronze_raw;
 
--- Ver la tabla nueva
 SELECT *
 FROM kafka_events_bronze_decoded
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Seis columnas, ya legibles. Sigue habiendo 2.252 filas: decodificar no añade ni quita eventos.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>decoded_value</code> sale como bytes y no como texto, falta el <code>cast(… AS STRING)</code>. Si sigue sin funcionar, salta al bloque 3.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>El JSON como texto<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>La forma más simple: dejar el JSON como STRING y sacar campos con <code>:</code>, como hiciste con <code>_rescued_data:_c0</code> en el laboratorio 0504. Es flexible, pero <b>todo lo que sale es texto</b>, también los objetos y arrays anidados.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>Extrae campos del texto JSON con <code>:</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Seis columnas: los metadatos del sobre tal cual y <code>decoded_key</code> / <code>decoded_value</code> ya legibles. Siguen siendo 2.252 filas.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>decoded_value</code> sale como bytes, falta el <code>cast(… AS STRING)</code>. Si sigue sin funcionar, salta al bloque 3.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Paso 2 · ¿Cómo guardo este JSON?<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Ya tienes el evento en <code>decoded_value</code>, pero sigue siendo <b>una sola columna de texto</b>. Para analizarlo necesitas llegar a lo de dentro: la ciudad, el importe, cada artículo. Mira qué forma tiene antes de decidir.</div>
+<p style="margin:0 0 6px"><b>Un evento por dentro</b>: una compra, decodificada.</p>
+<div class="json"><span class="c">{</span>
+  <span class="k">"device"</span>: <span class="s">"Chrome"</span>,<span class="tag es">escalar</span>
+  <span class="k">"ecommerce"</span>: <span class="c">{</span><span class="tag st">objeto → STRUCT</span>
+      <span class="k">"purchase_revenue_in_usd"</span>: <span class="n">850.5</span>,<span class="tag es">número · lo que se suma</span>
+      <span class="k">"total_item_quantity"</span>: <span class="n">1</span>,
+      <span class="k">"unique_items"</span>: <span class="n">1</span>
+  <span class="c">}</span>,
+  <span class="k">"event_name"</span>: <span class="s">"finalize"</span>,<span class="tag es">compra · 300 de 2.252</span>
+  <span class="k">"event_previous_timestamp"</span>: <span class="n">null</span>,
+  <span class="k">"event_timestamp"</span>: <span class="n">1596240000000000</span>,<span class="tag es">microsegundos</span>
+  <span class="k">"geo"</span>: <span class="c">{</span> <span class="k">"city"</span>: <span class="s">"Madrid"</span>, <span class="k">"state"</span>: <span class="s">"MD"</span> <span class="c">}</span>,<span class="tag st">objeto → STRUCT</span>
+  <span class="k">"items"</span>: <span class="c">[</span><span class="tag ar">lista → ARRAY de STRUCT</span>
+      <span class="c">{</span> <span class="k">"item_id"</span>: <span class="s">"M_STAN_T"</span>, <span class="k">"item_name"</span>: <span class="s">"Standard Twin Mattress"</span>,
+        <span class="k">"quantity"</span>: <span class="n">1</span>, <span class="k">"price_in_usd"</span>: <span class="n">850.5</span>, <span class="k">"coupon"</span>: <span class="s">"NEWBED10"</span>, … <span class="c">}</span>
+  <span class="c">]</span>,
+  <span class="k">"traffic_source"</span>: <span class="s">"email"</span>,
+  <span class="k">"user_first_touch_timestamp"</span>: <span class="n">1596240000000000</span>,
+  <span class="k">"user_id"</span>: <span class="s">"UA00000000000000"</span>
+<span class="c">}</span></div>
+<p>Los otros 1.952 eventos son visitas (<code>page_view</code>, <code>view_item</code>,
+<code>add_to_cart</code>): llegan con <code>"ecommerce": {}</code> vacío y
+<code>"items": []</code> (o <code>null</code> en 50 de ellos).</p>
+<p>Tienes tres formas de guardarlo, y las vas a probar las tres:</p>
+<div class="tabla"><table><thead><tr><th></th><th><span class="tag es" style="margin:0">STRING</span></th>
+<th><span class="tag st" style="margin:0">STRUCT</span></th><th><span class="tag ar" style="margin:0">VARIANT</span></th></tr></thead><tbody>
+<tr><td><b>Qué es</b></td><td>El JSON tal cual, como texto</td><td>Columnas anidadas con un <b>esquema fijo</b> que tú defines</td><td>El JSON en formato binario, <b>sin esquema fijo</b></td></tr>
+<tr><td><b>Lo creas con</b></td><td>Ya lo tienes</td><td><code>from_json(texto, esquema)</code></td><td><code>parse_json(texto)</code></td></tr>
+<tr><td><b>Tipo del importe</b></td><td>string</td><td>double</td><td>variant (lo conviertes con <code>::</code>)</td></tr>
+<tr><td><b>Explotar <code>items</code></b></td><td>No: es texto</td><td>Sí, con <code>explode</code></td><td>Sí, con <code>variant_explode</code></td></tr>
+<tr><td><b>Si aparece un campo nuevo</b></td><td>Se conserva</td><td><b>Se pierde sin avisar</b></td><td>Se conserva</td></tr>
+<tr><td><b>Velocidad de consulta</b></td><td>La peor: reinterpreta el texto cada vez</td><td>La mejor</td><td>Casi como STRUCT</td></tr>
+<tr><td><b>Para qué</b></td><td>Archivar o consultar muy poco</td><td>Esquema estable que el negocio consulta mucho</td><td>JSON que cambia o que aún no conoces</td></tr>
+</tbody></table></div>
+<div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Antes de seguir, apuesta: si mañana el equipo web añade un campo <code>campaign</code> al evento, ¿cuál de las tres se entera sin que cambies nada? Lo comprobarás en el bloque 7.</div></section><section class="bloque" id="b5"><h2><span class="num">4</span>Opción STRING: dejarlo como texto<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Lo más rápido de montar: no transformas nada y sacas campos con <code>:</code>. El precio está en que <b>todo lo que sacas es texto</b>, también los objetos y las listas. Para Databricks, <code>items</code> no es una lista: es una cadena que empieza por <code>[</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>Ejecuta la consulta del apartado <b>C1.1</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   decoded_value,
   decoded_value:device,
@@ -185,15 +258,7 @@ SELECT
   decoded_value:geo,
   decoded_value:items
 FROM kafka_events_bronze_decoded
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro columnas nuevas, todas STRING. <code>geo</code> es un texto como <code>{"city":"Madrid","state":"MD"}</code> e <code>items</code> probablemente <code>[]</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Repite la consulta filtrando solo las compras:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
-SELECT
-  decoded_value:event_name,
-  decoded_value:geo.city,
-  decoded_value:items
-FROM kafka_events_bronze_decoded
-WHERE decoded_value:event_name = &#x27;finalize&#x27;
-LIMIT 5;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Solo las compras llevan artículos. El 87 % de los eventos son <code>page_view</code>, <code>view_item</code> o <code>add_to_cart</code>, con <code>items</code> vacío.</div><div class="cal ok"><b class="etq">Deberías ver</b>Cinco compras (<code>finalize</code>) con su ciudad e <code>items</code> como un texto con el array de artículos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Crea la tabla <b>kafka_events_bronze_string_flattened</b>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Aplanar el texto JSON
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Los campos extraídos, todos como texto. Así lo devolvió Databricks:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>device</th><th>traffic_source</th><th>geo</th><th>items</th></tr></thead><tbody><tr><td><code>Chrome</code></td><td><code>email</code></td><td><code>{&quot;city&quot;:&quot;Madrid&quot;,&quot;state&quot;:&quot;MD&quot;}</code></td><td><code>[{&quot;coupon&quot;:&quot;NEWBED10&quot;,&quot;item_id&quot;:&quot;M_STAN_T&quot;,…}]</code></td></tr><tr><td><code>Safari</code></td><td><code>search</code></td><td><code>{&quot;city&quot;:&quot;Barcelona&quot;,&quot;state&quot;:&quot;CT&quot;}</code></td><td><code>[{&quot;coupon&quot;:null,&quot;item_id&quot;:&quot;M_PREM_T&quot;,…}]</code></td></tr></tbody></table></div><code>geo</code> e <code>items</code> parecen objeto y lista, pero son cadenas: la interfaz solo las pinta bonitas.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Guarda los campos extraídos en la tabla <b>kafka_events_bronze_string_flattened</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE kafka_events_bronze_string_flattened AS
 SELECT
   decoded_key,
@@ -203,28 +268,27 @@ SELECT
   topic,
   decoded_value:device,
   decoded_value:traffic_source,
-  decoded_value:geo,       ----- Contiene otro texto JSON
-  decoded_value:items      ----- Contiene un array anidado de textos JSON
+  decoded_value:geo,
+  decoded_value:items
 FROM kafka_events_bronze_decoded;
 
--- Ver la tabla
 SELECT *
-FROM kafka_events_bronze_string_flattened;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Nueve columnas: las cinco del sobre más <code>device</code>, <code>traffic_source</code>, <code>geo</code> e <code>items</code>, todas STRING.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si una columna sale vacía, revisa la ruta: el nombre del campo va justo detrás de <code>:</code>, sin espacios. Si sigue sin funcionar, salta al bloque 4.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>El JSON como STRUCT y explode<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Un STRUCT es un JSON con <b>esquema fijo</b>: cada campo tiene su tipo. Para crearlo, primero obtienes el esquema con <code>schema_of_json()</code> y después lo aplicas con <code>from_json()</code>. Con el array <code>items</code> ya tipado puedes convertir cada artículo en una fila con <code>explode()</code>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Obtén el esquema del JSON con <code>schema_of_json</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Obtener el esquema del texto JSON
+FROM kafka_events_bronze_string_flattened
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Nueve columnas. <code>offset</code>, <code>partition</code> y <code>timestamp</code> son BIGINT porque vienen del sobre. <code>device</code>, <code>traffic_source</code>, <code>geo</code> e <code>items</code> son STRING porque salen del JSON con <code>:</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si una columna sale vacía, revisa la ruta: el nombre del campo va justo detrás de <code>:</code>, sin espacios. Si sigue sin funcionar, salta al bloque 5.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>Opción STRUCT: darle una forma fija<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Le dices a Databricks <b>exactamente qué forma tiene el JSON</b>: qué campos, de qué tipo y cuáles son objetos o listas. A cambio, cada campo pasa a tener su tipo real (el importe es DOUBLE, <code>items</code> es una lista de verdad) y las consultas van más rápido. El esquema no hace falta escribirlo a mano: <code>schema_of_json()</code> lo deduce de un ejemplo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Deduce el esquema con <code>schema_of_json</code> a partir de una compra.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT schema_of_json(&#x27;{&quot;device&quot;:&quot;Linux&quot;,&quot;ecommerce&quot;:{&quot;purchase_revenue_in_usd&quot;:1881.0,&quot;total_item_quantity&quot;:2,&quot;unique_items&quot;:1},&quot;event_name&quot;:&quot;finalize&quot;,&quot;event_previous_timestamp&quot;:1596240138488000,&quot;event_timestamp&quot;:1596240190421000,&quot;geo&quot;:{&quot;city&quot;:&quot;Bilbao&quot;,&quot;state&quot;:&quot;PV&quot;},&quot;items&quot;:[{&quot;coupon&quot;:&quot;NEWBED10&quot;,&quot;item_id&quot;:&quot;M_STAN_Q&quot;,&quot;item_name&quot;:&quot;Standard Queen Mattress&quot;,&quot;item_revenue_in_usd&quot;:1881.0,&quot;price_in_usd&quot;:940.5,&quot;quantity&quot;:2}],&quot;traffic_source&quot;:&quot;search&quot;,&quot;user_first_touch_timestamp&quot;:1595289600000000,&quot;user_id&quot;:&quot;UA00000000000011&quot;}&#x27;)
-AS schema;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Se aplica a una compra con todos los campos rellenos. Con un evento de <code>items</code> vacío o con campos a <code>null</code>, el esquema saldría incompleto o con tipos equivocados.</div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con un texto largo que empieza por <code>STRUCT&lt;device: STRING, ecommerce: STRUCT&lt;…</code> y contiene <code>items: ARRAY&lt;STRUCT&lt;coupon: STRING, …</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Aplica ese esquema con <code>from_json</code> y crea la tabla <b>kafka_events_bronze_struct</b>. El esquema del código es el resultado del paso anterior:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+AS schema;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Se aplica a una compra con todos los campos rellenos. Con una visita (<code>items</code> vacío) el esquema no sabría qué hay dentro de la lista, y con un campo a <code>null</code> no sabría su tipo.</div><div class="cal ok"><b class="etq">Deberías ver</b>Una fila con el esquema deducido. Léelo como el JSON de arriba: <code>ecommerce: STRUCT&lt;…&gt;</code>, <code>geo: STRUCT&lt;city, state&gt;</code> e <code>items: ARRAY&lt;STRUCT&lt;coupon, item_id, …&gt;&gt;</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Aplica ese esquema con <code>from_json</code> y guarda el resultado en la tabla <b>kafka_events_bronze_struct</b>. El esquema ya va pegado: es el que acabas de obtener.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE kafka_events_bronze_struct AS
 SELECT
   * EXCEPT (decoded_value),
   from_json(
-      decoded_value,    -- Columna con el texto JSON
-      &#x27;STRUCT&lt;device: STRING, ecommerce: STRUCT&lt;purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT&gt;, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT&lt;city: STRING, state: STRING&gt;, items: ARRAY&lt;STRUCT&lt;coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT&gt;&gt;, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING&gt;&#x27;) AS value
+    decoded_value,
+    &#x27;STRUCT&lt;device: STRING, ecommerce: STRUCT&lt;purchase_revenue_in_usd: DOUBLE, total_item_quantity: BIGINT, unique_items: BIGINT&gt;, event_name: STRING, event_previous_timestamp: BIGINT, event_timestamp: BIGINT, geo: STRUCT&lt;city: STRING, state: STRING&gt;, items: ARRAY&lt;STRUCT&lt;coupon: STRING, item_id: STRING, item_name: STRING, item_revenue_in_usd: DOUBLE, price_in_usd: DOUBLE, quantity: BIGINT&gt;&gt;, traffic_source: STRING, user_first_touch_timestamp: BIGINT, user_id: STRING&gt;&#x27;
+  ) AS value
 FROM kafka_events_bronze_decoded;
 
--- Ver la tabla nueva
 SELECT *
 FROM kafka_events_bronze_struct
-LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Seis columnas, la última, <code>value</code>, de tipo STRUCT: puedes desplegarla y ver <code>ecommerce</code>, <code>geo</code> e <code>items</code> dentro.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Consulta los campos del STRUCT:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Una columna <code>value</code> de tipo STRUCT que puedes desplegar en la tabla de resultados. En texto plano, Databricks la representa así:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>decoded_key</th><th>value</th></tr></thead><tbody><tr><td><code>UA00000000000000</code></td><td><code>List(Chrome, List(850.5, 1, 1), finalize, null, …, List(Madrid, MD), List(List(NEWBED10, M_STAN_T, …)), email, …)</code></td></tr></tbody></table></div>Ya no es texto: son campos con su tipo, uno dentro de otro.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Ejecuta la consulta del apartado <b>C2.2</b>: navegas con <code>.</code> y cuentas los artículos.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   decoded_key,
   value.device as device,
@@ -232,27 +296,21 @@ SELECT
   value.items as items,
   array_size(items) AS number_elements_in_array
 FROM kafka_events_bronze_struct
-ORDER BY number_elements_in_array DESC;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Arriba, 103 compras de 3 artículos; luego 197 de 1, 1.902 eventos con 0 y, al final, 50 con <code>NULL</code> (los que traen <code>items: null</code>).</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Convierte cada artículo en una fila con <code>explode</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Explotar el array en una fila por elemento
+ORDER BY number_elements_in_array DESC;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Primero las compras de 3 artículos (103), luego las de 1 (197), las visitas con 0 (1.902) y al final 50 con <code>NULL</code>. <code>array_size</code> solo funciona porque <code>items</code> ya es un ARRAY: con el texto del bloque 4 no podrías.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Explota <code>items</code> en la tabla <b>bronze_explode_array</b>: una fila por artículo.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE bronze_explode_array AS
 SELECT
   decoded_key,
   array_size(value.items) AS number_elements_in_array,
   explode(value.items) AS item_in_array,
   value.items
-FROM kafka_events_bronze_struct
-ORDER BY number_elements_in_array DESC;
+FROM kafka_events_bronze_struct;
 
--- Ver la tabla
 SELECT *
-FROM bronze_explode_array;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>506 filas</b>: una por artículo. Cada compra de 3 artículos aparece 3 veces con un <code>item_in_array</code> distinto.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Ejecuta la comparación de recuentos:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+FROM bronze_explode_array
+ORDER BY number_elements_in_array DESC;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><b>506 filas</b>. Cada compra de 3 artículos se repite 3 veces, una por artículo. Así lo devolvió Databricks:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>decoded_key</th><th>number_elements_in_array</th><th>item_in_array</th></tr></thead><tbody><tr><td><code>UA00000000000197</code></td><td><code>3</code></td><td><code>List(null, PILLOW, Memory Foam Pillow, 91.0, 45.5, 2)</code></td></tr><tr><td><code>UA00000000000197</code></td><td><code>3</code></td><td><code>List(NEWBED10, SHEETS, Cotton Sheets, 79.5, 79.5, 1)</code></td></tr><tr><td><code>UA00000000000197</code></td><td><code>3</code></td><td><code>List(null, BASE, Bed Base, 498.0, 249.0, 2)</code></td></tr></tbody></table></div></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Ejecuta la comparación de recuentos.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   (SELECT count(*) FROM (SELECT explode(value.items) FROM kafka_events_bronze_struct))       AS filas_explode,
-  (SELECT count(*) FROM (SELECT explode_outer(value.items) FROM kafka_events_bronze_struct)) AS filas_explode_outer;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>filas_explode</code> = <b>506</b> y <code>filas_explode_outer</code> = <b>2.458</b>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿De dónde salen las 1.952 filas de diferencia? Son los eventos sin artículos: <code>explode()</code> no genera filas para un array vacío o nulo, y <code>explode_outer()</code> genera una con <code>NULL</code> para cada uno. Si pierdes esos eventos al explotar, también pierdes sus visitas.</div><div class="cal help"><b class="etq">Si algo falla</b>Si el CTAS con <code>from_json</code> da error, el esquema pegado está incompleto: vuelve a copiar el bloque de código del paso 2. Si sigue sin funcionar, salta al bloque 5.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>El JSON como VARIANT<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>VARIANT guarda el JSON con su estructura y sin esquema fijo: no hay que calcular ni pegar nada, y aun así se consulta rápido. Con <code>:</code> obtienes otro VARIANT, y con <code>::</code> lo conviertes al tipo que quieras.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Mira otra vez la tabla decodificada y después crea la tabla VARIANT con <code>parse_json</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
-SELECT *
-FROM kafka_events_bronze_decoded
-LIMIT 5;</code></pre></div><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
--- Crear una columna VARIANT
+  (SELECT count(*) FROM (SELECT explode_outer(value.items) FROM kafka_events_bronze_struct)) AS filas_explode_outer;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>filas_explode</code> = <b>506</b> y <code>filas_explode_outer</code> = <b>2.458</b>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿De dónde salen las 1.952 filas de diferencia? De las visitas sin artículos. <code>explode()</code> las descarta y <code>explode_outer()</code> deja una fila con <code>NULL</code> para cada una. Para un informe de artículos vendidos, <code>explode</code>; para no perder visitas, <code>explode_outer</code>.</div><div class="cal help"><b class="etq">Si algo falla</b>Si el CTAS con <code>from_json</code> da error, el esquema pegado está incompleto: vuelve a copiar el bloque con el botón <b>Copiar</b>. Si sigue sin funcionar, salta al bloque 6.</div></ol></section><section class="bloque" id="b7"><h2><span class="num">6</span>Opción VARIANT: forma flexible<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>VARIANT guarda el JSON en un formato binario que Databricks sabe recorrer rápido, <b>sin que le des un esquema</b>. No calculas ni pegas nada: <code>parse_json</code> y listo. Cuando consultas, <code>:</code> te devuelve otro VARIANT y tú decides el tipo con <code>::</code> en el momento de usarlo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Convierte <code>decoded_value</code> a VARIANT con <code>parse_json</code> y guárdalo en la tabla <b>kafka_events_bronze_variant</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 CREATE OR REPLACE TABLE kafka_events_bronze_variant AS
 SELECT
   decoded_key,
@@ -260,19 +318,47 @@ SELECT
   partition,
   timestamp,
   topic,
-  parse_json(decoded_value) AS json_variant_value   -- Convierte decoded_value al tipo VARIANT
+  parse_json(decoded_value) AS json_variant_value
 FROM kafka_events_bronze_decoded;
 
--- Ver la tabla
 SELECT *
 FROM kafka_events_bronze_variant
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>La tabla <b>kafka_events_bronze_variant</b> con una columna <code>json_variant_value</code> de tipo <b>VARIANT</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Consulta la columna VARIANT:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>La tabla <b>kafka_events_bronze_variant</b> con la columna <code>json_variant_value</code> de tipo <b>VARIANT</b>. Compárala con el paso 2 del bloque 5: aquí no hubo ningún esquema.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Ejecuta la consulta del paso 3:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 SELECT
   json_variant_value,
   json_variant_value:device :: STRING,
   json_variant_value:items
 FROM kafka_events_bronze_variant
-LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>device</code> como STRING (<code>Chrome</code>, <code>Linux</code>…) e <code>items</code> como VARIANT.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Mismo campo, tres formas: <code>decoded_value:device</code> devuelve siempre texto; <code>value.device</code>, el tipo del esquema que pegaste; <code>json_variant_value:device</code>, un VARIANT que conviertes con <code>::</code>.</div><div class="cal help"><b class="etq">Si algo falla</b>Si <code>parse_json</code> da un error de tipo no soportado, tu entorno Serverless es la versión 1: cámbialo en el panel <b>Environment</b>. Si sigue sin funcionar, salta al bloque extra.</div></ol></section><section class="bloque" id="b7"><h2><span class="num">+</span>Extra: el JSON cambia<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>La gran pega del STRUCT es que el esquema es fijo. <code>00_preparar_entorno</code> dejó en <code>events-kafka-extra/</code> dos ficheros más recientes, y algunos de sus eventos traen un campo nuevo, <code>campaign</code>. Aquí ves qué pasa con él en cada formato.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span>Cuenta cuántos eventos nuevos traen <code>campaign</code>:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+LIMIT 10;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Así lo devolvió Databricks:<div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>device</th><th>items</th></tr></thead><tbody><tr><td><code>Chrome</code></td><td><code>[{&quot;coupon&quot;:&quot;NEWBED10&quot;,&quot;item_id&quot;:&quot;M_STAN_T&quot;,…}]</code></td></tr><tr><td><code>Safari</code></td><td><code>[{&quot;coupon&quot;:null,&quot;item_id&quot;:&quot;M_PREM_T&quot;,…}]</code></td></tr></tbody></table></div>Se parece al bloque 4, pero no es lo mismo: <code>items</code> aquí es un VARIANT que conserva su estructura de lista, no una cadena.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>parse_json</code> da un error de tipo no soportado, tu entorno Serverless es la versión 1: cámbialo en el panel <b>Environment</b>. Si sigue sin funcionar, salta al bloque 7.</div></ol></section><section class="bloque" id="b8"><h2><span class="num">7</span>La misma pregunta, tres formatos<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Aquí se ve la diferencia práctica. Primero, qué tipo tiene el importe de una compra en cada tabla. Después, una pregunta de negocio real, <b>¿cuánto se ha vendido en cada ciudad?</b>, resuelta con los tres formatos.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Ejecuta la consulta <code>typeof</code> del apartado <b>E</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+SELECT &#x27;STRING&#x27; AS formato,
+       typeof(decoded_value:ecommerce.purchase_revenue_in_usd) AS tipo_del_importe
+FROM (SELECT * FROM kafka_events_bronze_decoded LIMIT 1)
+UNION ALL
+SELECT &#x27;STRUCT&#x27;, typeof(value.ecommerce.purchase_revenue_in_usd)
+FROM (SELECT * FROM kafka_events_bronze_struct LIMIT 1)
+UNION ALL
+SELECT &#x27;VARIANT&#x27;, typeof(json_variant_value:ecommerce.purchase_revenue_in_usd)
+FROM (SELECT * FROM kafka_events_bronze_variant LIMIT 1);</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><div class="tabla" style="margin:8px 0 4px"><table><thead><tr><th>formato</th><th>tipo_del_importe</th></tr></thead><tbody><tr><td><code>STRING</code></td><td><code>string</code></td></tr><tr><td><code>STRUCT</code></td><td><code>double</code></td></tr><tr><td><code>VARIANT</code></td><td><code>variant</code></td></tr></tbody></table></div>El mismo 850.5, tres tipos distintos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span>Ejecuta las tres versiones de <b>ingresos por ciudad</b>. Fíjate en cuánto trabajo extra pide cada una para el mismo resultado.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+-- STRING: hay que convertir el importe en cada consulta
+SELECT decoded_value:geo.city AS ciudad,
+       round(sum(decoded_value:ecommerce.purchase_revenue_in_usd::DOUBLE), 2) AS ingresos
+FROM kafka_events_bronze_decoded
+WHERE decoded_value:event_name = &#x27;finalize&#x27;
+GROUP BY ALL ORDER BY ingresos DESC;
+
+-- STRUCT: los tipos ya están, se suma directamente
+SELECT value.geo.city AS ciudad,
+       round(sum(value.ecommerce.purchase_revenue_in_usd), 2) AS ingresos
+FROM kafka_events_bronze_struct
+WHERE value.event_name = &#x27;finalize&#x27;
+GROUP BY ALL ORDER BY ingresos DESC;
+
+-- VARIANT: se convierte con :: al usarlo (y para agrupar, a STRING)
+SELECT json_variant_value:geo.city::STRING AS ciudad,
+       round(sum(json_variant_value:ecommerce.purchase_revenue_in_usd::DOUBLE), 2) AS ingresos
+FROM kafka_events_bronze_variant
+WHERE json_variant_value:event_name::STRING = &#x27;finalize&#x27;
+GROUP BY ALL ORDER BY ingresos DESC;</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>En VARIANT, la ciudad se convierte a STRING porque no se puede agrupar ni comparar un VARIANT directamente. Es el mismo precio que en STRING, pero con datos que ya están en binario y no hay que reinterpretar.</div><div class="cal ok"><b class="etq">Deberías ver</b>Las tres dan lo mismo: 6 ciudades con 50 compras cada una, de Valencia (<b>96.709,90</b>) a Madrid (<b>81.715,30</b>), <b>538.562,30 USD</b> en total.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Con 2.252 eventos las tres van igual de rápido. Con 2.000 millones, la versión STRING reinterpretaría cada texto JSON en cada consulta. Por eso nadie analiza en STRING a escala: o le das forma (STRUCT) o lo guardas en un formato que se recorre rápido (VARIANT).</div></ol></section><section class="bloque" id="b9"><h2><span class="num">8</span>El JSON cambia: por qué existe VARIANT<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los productores de eventos añaden campos sin avisar. <code>00_preparar_entorno</code> dejó en <code>events-kafka-extra/</code> dos ficheros más recientes en los que algunos eventos traen un campo nuevo, <code>campaign</code>, que no estaba cuando sacaste el esquema del bloque 5.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Cuenta cuántos eventos nuevos traen <code>campaign</code>, leyendo el texto JSON.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 WITH eventos AS (
   SELECT cast(unbase64(value) AS STRING) AS decoded_value
   FROM read_files(&quot;/Volumes/lab0505/upload/upload/events-kafka-extra&quot;, format =&gt; &quot;json&quot;)
@@ -280,7 +366,7 @@ WITH eventos AS (
 SELECT
   count(*) AS eventos,
   count(decoded_value:campaign) AS con_campaign
-FROM eventos;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>eventos</code> = 1.100 y <code>con_campaign</code> = <b>367</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Compara cómo queda <code>campaign</code> con STRUCT y con VARIANT:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
+FROM eventos;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>eventos</code> = 1.100 y <code>con_campaign</code> = <b>367</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p25"><span>Lee esos eventos con el esquema STRUCT del bloque 5 y con VARIANT, y compara.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copiar</button></div><pre><code>%sql
 WITH eventos AS (
   SELECT cast(unbase64(value) AS STRING) AS decoded_value
   FROM read_files(&quot;/Volumes/lab0505/upload/upload/events-kafka-extra&quot;, format =&gt; &quot;json&quot;)
@@ -290,8 +376,21 @@ SELECT
   parse_json(decoded_value):campaign AS campaign_en_variant
 FROM eventos
 WHERE decoded_value:campaign IS NOT NULL
-LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>En <code>como_struct</code> no aparece <code>campaign</code>: el esquema fijo lo ha descartado sin avisar. En <code>campaign_en_variant</code> sí, por ejemplo <code>{"channel":"social","experiment":"layout-b","id":"campaign-6"}</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el recuento da 0 eventos, la carpeta <code>events-kafka-extra</code> no existe: vuelve a ejecutar <code>00_preparar_entorno</code>. Si sigue sin funcionar, no pasa nada: es material extra y el laboratorio está completo con los bloques anteriores.</div></ol></section>
-<div class="fin"><b>Fin del laboratorio</b>Sabes llevar un JSON de Kafka desde el Base64 hasta columnas consultables, y elegir entre STRING, STRUCT y VARIANT según lo estable que sea su estructura. Con esto cierras la ingesta de ficheros del tema 05.</div>
+LIMIT 5;</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>En <code>como_struct</code> <b>no aparece</b> <code>campaign</code>: el esquema fijo lo ha descartado sin avisar. En <code>campaign_en_variant</code> está entero, por ejemplo <code>{"channel":"social","experiment":"layout-b","id":"campaign-6"}</code>.</div></li></ol>
+<div class="cal cierre" style="margin-top:22px"><b class="etq" style="color:var(--ok)">Entonces, ¿cuál elijo?</b>
+En un proyecto real no se elige uno para todo: cada capa usa el suyo.
+<div class="flujo" style="margin-top:12px">
+  <div class="caja"><b>Kafka</b>Base64</div>
+  <div class="flecha">→</div>
+  <div class="caja on"><b>Bronze</b><span class="tag ar" style="margin:0 0 4px">VARIANT</span><br>
+    Guardas el evento entero. Si mañana llega <code>campaign</code>, no lo pierdes.</div>
+  <div class="flecha">→</div>
+  <div class="caja on"><b>Silver</b><span class="tag st" style="margin:0 0 4px">STRUCT / columnas</span><br>
+    Solo los campos que el negocio usa, con su tipo, y <code>items</code> explotado.</div>
+</div>
+STRING queda para archivar el texto original o para consultas puntuales.</div>
+<div class="cal help"><b class="etq">Si algo falla</b>Si el recuento da 0 eventos, la carpeta <code>events-kafka-extra</code> no existe: vuelve a ejecutar <code>00_preparar_entorno</code>.</div></section>
+<div class="fin"><b>Fin del laboratorio</b>Sabes llevar un mensaje de Kafka desde el Base64 hasta columnas que se pueden sumar y explotar, y sobre todo sabes <b>cuándo</b> usar cada formato: VARIANT para guardarlo todo en Bronze aunque cambie, STRUCT o columnas tipadas para lo que el negocio consulta en Silver.</div>
 </div>
 <div id="lb"><img alt=""></div>
 <script>
