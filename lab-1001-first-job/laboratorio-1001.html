@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Topic 10 · Lab 1 · Your first job</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+.ph{margin:12px 0 0;padding:14px 16px;border:2px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13.5px}
+.ph code{font-weight:600}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+.json{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px 16px;margin:12px 0;
+ font:12.5px/1.6 Consolas,"SF Mono",Menlo,monospace;overflow-x:auto;white-space:pre}
+.json .k{color:#93c5fd} .json .s{color:#86efac} .json .n{color:#fcd34d} .json .c{color:#7c8ba1}
+.tag{display:inline-block;margin-left:10px;padding:0 8px;border-radius:10px;
+ font:600 11px/18px "Segoe UI",system-ui,sans-serif;vertical-align:1px}
+.tag.st{background:#1d4ed8;color:#fff} .tag.ar{background:#7e22ce;color:#fff}
+.tag.es{background:#475569;color:#fff} .tag.b64{background:#b45309;color:#fff}
+.tag.ok{background:var(--ok);color:#fff}
+.flujo{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0 18px}
+.flujo .caja{flex:1 1 150px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;
+ font-size:13.5px;background:#fff}
+.flujo .caja b{display:block;color:var(--acc);margin-bottom:3px}
+.flujo .caja.on{border-color:var(--acc);background:var(--acc-soft)}
+.flujo .flecha{align-self:center;color:var(--muted);font-size:18px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> of 27 steps completed</span>
+  <button id="reset">Start over</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Topic 10 · Lab 1</p>
+  <h1>Your first job</h1>
+  <p class="sub">It is your first Monday in the operations data team at <b>Ventolia Energy</b>, which runs three wind farms. Every morning someone downloads a CSV with each turbine's daily production and builds the report by hand. Your first assignment: make Databricks do it, with a job that loads the file and a dashboard that refreshes itself.</p>
+  <div class="meta"><span><b>6 blocks</b> · 27 steps</span><span>About 40 minutes</span><span>Every snippet copies with one click</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Set up the environment</a><a href="#b2"><span>1</span>The report, still empty</a><a href="#b3"><span>2</span>Create the job</a><a href="#b4"><span>3</span>Run and check</a><a href="#b5"><span>4</span>Another day, same job</a><a href="#b6"><span>5</span>Let the report update itself</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Set up the environment<span class="min">8 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>Everything for this lab (data, the SQL file and the dashboard) lives in the course repository. You will clone it into a <b>Git folder</b>: a folder in your Workspace connected to a Git repository. Then a setup notebook creates the <code>lab1001</code> catalog and copies the two production reports into a volume.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>In the left sidebar click <b>Workspace</b>, open <b>Home</b> and click <b>Create</b> (top right) → <b>Git folder</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-01-git-folder-crear.png</code></div><div class="cal ok"><b class="etq">You should see</b>The <b>Create Git folder</b> dialog.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Paste the repository URL in <b>Git repository URL</b>. The provider (<b>GitHub</b>) and the folder name fill in by themselves. Click <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copy</button></div><div class="cal warn"><b class="etq">Watch out</b>If you already cloned the repository in an earlier lab, do not clone it again: open the folder, click the branch name at the top and <b>Pull</b> to bring the new labs.</div><div class="ph">📷 Screenshot to take: <code>1001-02-git-folder-url.png</code></div><div class="cal ok"><b class="etq">You should see</b>A new folder <b>BAC-big-data</b> in your Home, with a branch icon.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>Open <b>BAC-big-data</b> → <b>lab-1001-first-job</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-03-git-folder-arbol.png</code></div><div class="cal ok"><b class="etq">You should see</b>The notebook <code>00_setup_environment</code>, the folders <code>data</code> and <code>src</code>, and the dashboard <code>1001-production-report</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Open <b>00_setup_environment</b>. Check that the compute selector at the top right says <b>Serverless</b> and click <b>Run all</b>.</span></label><div class="cal info2"><b class="etq">Why this</b>The notebook finds its own folder, so nobody has to type their email into any path.</div><div class="ph">📷 Screenshot to take: <code>1001-04-preparar-run-all.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Wait for the last cell to finish and read the output.</span></label><div class="ph">📷 Screenshot to take: <code>1001-05-preparar-salida.png</code></div><div class="cal ok"><b class="etq">You should see</b>Two lines <code>copied production_2026-10-19.csv</code> and <code>copied production_2026-10-20.csv</code>, a table with both files, and at the end the full path of <code>01_load_production.sql</code>. <b>Keep this tab open</b>: you will copy that path in block 2.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>In the left sidebar click <b>Catalog</b> and expand <b>lab1001</b> → <b>landing</b> → <b>Volumes</b> → <b>data</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-06-volumen-ficheros.png</code></div><div class="cal ok"><b class="etq">You should see</b>The two CSV files, one per day. This is where the job will read from.</div></li><div class="cal help"><b class="etq">If something fails</b>If <b>Run all</b> fails on the first cell, check that the notebook is attached to <b>Serverless</b> and run it again. If the error says the catalog already exists, that is fine: the notebook can be run twice. If it still fails, ask for the files to be copied for you and jump to block 1.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>The report, still empty<span class="min">3 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>The production dashboard is already built: it came with the repository, saved as a file. It reads the table <code>lab1001.bronze.production</code>, which does not exist yet. Filling it is the job's work.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Back in <b>Workspace</b>, in <b>lab-1001-first-job</b>, click <b>1001-production-report</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-07-dashboard-en-git-folder.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Look at the dashboard without changing anything.</span></label><div class="ph">📷 Screenshot to take: <code>1001-08-dashboard-vacio.png</code></div><div class="cal ok"><b class="etq">You should see</b>Empty visuals or a message saying the table cannot be found. That is expected: there is no data yet.</div></li></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Create the job<span class="min">10 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>A <b>job</b> is the container: it decides when work runs and with which parameters. A <b>task</b> is one unit of work inside it. Your job will have a single task of type <b>SQL</b> that runs the file <code>01_load_production.sql</code> on a SQL warehouse.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>In the left sidebar click <b>Jobs &amp; Pipelines</b> → <b>Create</b> → <b>Job</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-09-jobs-create.png</code></div><div class="cal ok"><b class="etq">You should see</b>An empty canvas and, below it, the form of the first task.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Click the job name at the top (<i>New Job …</i>) and rename it:</span></label><div class="urlbox"><code>1001-production-report</code><button class="copy">Copy</button></div><div class="ph">📷 Screenshot to take: <code>1001-10-job-nombre.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>In the task form, type the <b>Task name</b> and open the <b>Type</b> drop-down to choose <b>SQL</b>.</span></label><div class="urlbox"><code>load_production</code><button class="copy">Copy</button></div><div class="ph">📷 Screenshot to take: <code>1001-11-tarea-tipo.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Fill in the rest of the task: <b>SQL task</b> = <b>File</b>, <b>Source</b> = <b>Workspace</b>, <b>Path</b> = the path the setup notebook printed, and <b>SQL warehouse</b> = <b>Serverless Starter Warehouse</b>. Click <b>Create task</b>.</span></label><div class="cal warn"><b class="etq">Watch out</b>Paste the path exactly as printed, starting with <code>/Workspace/Users/…</code> and ending in <code>01_load_production.sql</code>.</div><div class="ph">📷 Screenshot to take: <code>1001-12-tarea-config.png</code></div><div class="cal ok"><b class="etq">You should see</b>The task <b>load_production</b> on the canvas.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span>In the right panel, find <b>Job parameters</b> and click <b>Edit parameters</b> → <b>Add</b>. Key <code>file</code>, value below. Click <b>Save</b>.</span></label><div class="urlbox"><code>production_2026-10-19.csv</code><button class="copy">Copy</button></div><div class="cal info2"><b class="etq">Why this</b>The SQL reads <code>:file</code> instead of a fixed name. Tomorrow's report will be another file, and the job will not need to change.</div><div class="ph">📷 Screenshot to take: <code>1001-13-job-parameters.png</code></div><div class="cal ok"><b class="etq">You should see</b><code>file = production_2026-10-19.csv</code> under <b>Job parameters</b>.</div></li><p>This is the SQL your task runs. You do not need to copy it: it is already in the repository.</p><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>-- 1001 · Load one day&#x27;s production report into bronze
+--
+-- Job parameter: file (for example production_2026-10-19.csv).
+-- Safe to re-run with the same file: REPLACE WHERE swaps the rows of that file
+-- instead of appending them again.
+
+CREATE TABLE IF NOT EXISTS lab1001.bronze.production (
+  date              DATE,
+  park_id           STRING,
+  park              STRING,
+  turbine_id        STRING,
+  model             STRING,
+  rated_power_mw    DOUBLE,
+  avg_wind_speed_ms DOUBLE,
+  operating_hours   DOUBLE,
+  energy_mwh        DOUBLE,
+  source_file       STRING,
+  loaded_at         TIMESTAMP
+);
+
+INSERT INTO lab1001.bronze.production
+REPLACE WHERE source_file = :file
+SELECT
+  date,
+  park_id,
+  park,
+  turbine_id,
+  model,
+  rated_power_mw,
+  avg_wind_speed_ms,
+  operating_hours,
+  energy_mwh,
+  :file               AS source_file,
+  current_timestamp() AS loaded_at
+FROM read_files(
+  &#x27;/Volumes/lab1001/landing/data/&#x27; || :file,
+  format =&gt; &#x27;csv&#x27;,
+  header =&gt; true,
+  schema =&gt; &#x27;date DATE, park_id STRING, park STRING, turbine_id STRING, model STRING, rated_power_mw DOUBLE, avg_wind_speed_ms DOUBLE, operating_hours DOUBLE, energy_mwh DOUBLE&#x27;
+);
+</code></pre></div><div class="cal help"><b class="etq">If something fails</b>If you cannot find <b>Serverless Starter Warehouse</b>, open <b>SQL Warehouses</b> in the sidebar and start the one that is there. If the <b>Path</b> is not accepted, open the setup notebook and copy the path again from its last cell.</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Run and check<span class="min">7 min</span></h2><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>Click <b>Run now</b> (top right).</span></label><div class="ph">📷 Screenshot to take: <code>1001-14-run-now.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Open the <b>Runs</b> tab and wait until the run says <b>Succeeded</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-15-runs-lista.png</code></div><div class="cal ok"><b class="etq">You should see</b>One run in green. The first one can take a minute or two while the SQL warehouse starts.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>Click the run's start time to open it, then the task <b>load_production</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-16-run-detalle.png</code></div><div class="cal ok"><b class="etq">You should see</b>Duration, status and, under <b>Parameters</b>, <code>file = production_2026-10-19.csv (resolved)</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Open <b>SQL Editor</b> in the sidebar, pick the <b>Serverless Starter Warehouse</b>, paste this query and click <b>Run</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>SELECT date, park, count(*) AS turbines, round(sum(energy_mwh), 1) AS energy_mwh
+FROM lab1001.bronze.production
+GROUP BY date, park
+ORDER BY date, park;</code></pre></div><div class="ph">📷 Screenshot to take: <code>1001-17-sql-editor-conteo.png</code></div><div class="cal ok"><b class="etq">You should see</b>Three rows for 2026-10-19, 12 turbines each: High Ridge 767.0, Long Plains 553.7 and North Cape 706.6 MWh.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span>Go back to the job and click <b>Run now</b> again, with the same file. When it finishes, run the query again.</span></label><div class="cal ok"><b class="etq">You should see</b>Exactly the same three rows. The SQL uses <code>REPLACE WHERE</code>: re-running a day replaces it instead of duplicating it.</div></li><div class="cal chk"><b class="etq">Check your understanding</b>Why is it important that running the job twice gives the same result? Think about what happens when someone presses <b>Run now</b> by mistake, or a run is retried after a failure.</div></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>Another day, same job<span class="min">5 min</span></h2><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span>Click the arrow next to <b>Run now</b> → <b>Run now with different parameters</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-18-run-now-desplegable.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Change <code>file</code> to Tuesday's report and click <b>Run</b>.</span></label><div class="urlbox"><code>production_2026-10-20.csv</code><button class="copy">Copy</button></div><div class="ph">📷 Screenshot to take: <code>1001-19-dialogo-parametros.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>In <b>Runs</b>, compare both executions.</span></label><div class="ph">📷 Screenshot to take: <code>1001-20-runs-dos.png</code></div><div class="cal ok"><b class="etq">You should see</b>Two (or three) runs of the same job, each with its own <code>file</code> value.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Run the SQL Editor query again, and then this one to find the turbines that did not work all day on Tuesday.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>SELECT turbine_id, park, operating_hours, energy_mwh
+FROM lab1001.bronze.production
+WHERE date = &#x27;2026-10-20&#x27; AND operating_hours &lt; 24
+ORDER BY operating_hours;</code></pre></div><div class="cal ok"><b class="etq">You should see</b>Six rows in the first query: Tuesday had little wind (High Ridge 215.1, Long Plains 176.1, North Cape 250.1 MWh). In the second one, <b>P01-WTG03</b> stopped all day (0 hours) and <b>P03-WTG11</b> worked 14.5 hours.</div></li><div class="cal help"><b class="etq">If something fails</b>If Tuesday does not appear, open the last run and check that the parameter says <code>production_2026-10-20.csv</code>, with no spaces.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>Let the report update itself<span class="min">7 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>A job can have more than one task. A task of type <b>Dashboard</b> refreshes a dashboard's data and can email a snapshot to its subscribers. If it depends on <b>load_production</b>, it only runs when the load has finished.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span>Open the dashboard <b>1001-production-report</b> again and click <b>Refresh</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-21-dashboard-con-datos.png</code></div><div class="cal ok"><b class="etq">You should see</b>Production by park for both days, and Tuesday's stopped turbines.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Back in the job, on the <b>Tasks</b> tab, click <b>Add task</b> → <b>Dashboard</b>. Name it as below, choose the dashboard <b>1001-production-report</b> and the <b>Serverless Starter Warehouse</b>, and add yourself under <b>Subscribers</b>. Click <b>Create task</b>.</span></label><div class="urlbox"><code>refresh_report</code><button class="copy">Copy</button></div><div class="cal warn"><b class="etq">Watch out</b>Check that <b>Depends on</b> says <b>load_production</b>. That arrow is what makes the dashboard wait for the data.</div><div class="ph">📷 Screenshot to take: <code>1001-22-tarea-dashboard-config.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p25"><span>Look at the canvas.</span></label><div class="ph">📷 Screenshot to take: <code>1001-23-graph-dos-tareas.png</code></div><div class="cal ok"><b class="etq">You should see</b>Two tasks joined by an arrow: <b>load_production</b> → <b>refresh_report</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p26"><span>In the right panel, under <b>Job notifications</b>, click <b>Edit notifications</b> → <b>Add notification</b>. Choose your email and tick <b>Failure</b>. Click <b>Save</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1001-24-notificacion-fallo.png</code></div><div class="cal ok"><b class="etq">You should see</b>Your email in the job's notification list, with failure ticked.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p27"><span>Click <b>Run now</b> one last time and check your inbox when it finishes.</span></label><div class="ph">📷 Screenshot to take: <code>1001-25-email-snapshot.png</code></div><div class="cal ok"><b class="etq">You should see</b>An email with a snapshot of the production report.</div></li><div class="cal help"><b class="etq">If something fails</b>If <b>Dashboard</b> does not appear as a task type, skip the last three steps: refreshing by hand with <b>Refresh</b> is enough for this lab.</div></ol></section>
+<div class="fin"><b>End of the lab</b>You have a job that loads any day's report without touching the SQL, refreshes the production dashboard and emails you if it fails. In lab 1002 the committee asks for more: four sources, tasks in parallel and decisions inside the job.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab1001en';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copied';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>
