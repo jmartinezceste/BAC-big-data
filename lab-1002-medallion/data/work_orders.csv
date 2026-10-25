@@ -1,0 +1,4 @@
+work_order_id,turbine_id,start_time,end_time,reason
+WO-1001,P01-WTG03,2026-10-21 10:00:00,2026-10-21 16:00:00,Gearbox inspection
+WO-1002,P02-WTG07,2026-10-21 00:00:00,2026-10-21 06:00:00,Blade repair
+WO-1003,P03-WTG11,2026-10-21 13:00:00,2026-10-21 17:30:00,Yaw system fault

@@ -1,0 +1,524 @@
+{
+  "datasets": [
+    {
+      "name": "kpis",
+      "displayName": "kpis",
+      "queryLines": [
+        "SELECT count(DISTINCT date)       AS days_loaded,\n",
+        "       count(DISTINCT park)       AS wind_farms,\n",
+        "       count(DISTINCT turbine_id) AS turbines,\n",
+        "       count(*)                   AS rows_loaded,\n",
+        "       round(sum(energy_mwh), 1)  AS total_mwh\n",
+        "FROM lab1001.bronze.production"
+      ]
+    },
+    {
+      "name": "by_farm",
+      "displayName": "by_farm",
+      "queryLines": [
+        "SELECT CAST(date AS STRING) AS day, park, round(sum(energy_mwh), 1) AS energy_mwh\n",
+        "FROM lab1001.bronze.production\n",
+        "GROUP BY date, park"
+      ]
+    },
+    {
+      "name": "stopped",
+      "displayName": "stopped",
+      "queryLines": [
+        "SELECT CAST(date AS STRING) AS day, park, turbine_id, operating_hours, energy_mwh\n",
+        "FROM lab1001.bronze.production\n",
+        "WHERE operating_hours < 24\n",
+        "ORDER BY date, operating_hours"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "production",
+      "displayName": "Production",
+      "layout": [
+        {
+          "widget": {
+            "name": "title",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Ventolia Energy · Daily production report\n",
+                "Loaded from `lab1001.bronze.production` by the job **1001-production-report**."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 1
+          }
+        },
+        {
+          "widget": {
+            "name": "days",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpis",
+                  "fields": [
+                    {
+                      "name": "days_loaded",
+                      "expression": "`days_loaded`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "days_loaded",
+                  "displayName": "Days loaded"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Days loaded"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 1,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "farms",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpis",
+                  "fields": [
+                    {
+                      "name": "wind_farms",
+                      "expression": "`wind_farms`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "wind_farms",
+                  "displayName": "Wind farms"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Wind farms"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 1,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "turbines",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpis",
+                  "fields": [
+                    {
+                      "name": "turbines",
+                      "expression": "`turbines`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "turbines",
+                  "displayName": "Turbines"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Turbines"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 1,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "rows",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpis",
+                  "fields": [
+                    {
+                      "name": "rows_loaded",
+                      "expression": "`rows_loaded`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "rows_loaded",
+                  "displayName": "Rows"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Rows"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 1,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "mwh",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "kpis",
+                  "fields": [
+                    {
+                      "name": "total_mwh",
+                      "expression": "`total_mwh`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "total_mwh",
+                  "displayName": "Total MWh"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Total MWh"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 1,
+            "width": 2,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "energy_by_farm",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "by_farm",
+                  "fields": [
+                    {
+                      "name": "park",
+                      "expression": "`park`"
+                    },
+                    {
+                      "name": "day",
+                      "expression": "`day`"
+                    },
+                    {
+                      "name": "sum(energy_mwh)",
+                      "expression": "SUM(`energy_mwh`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "park",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Wind farm"
+                },
+                "y": {
+                  "fieldName": "sum(energy_mwh)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "MWh"
+                },
+                "color": {
+                  "fieldName": "day",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Day"
+                }
+              },
+              "mark": {
+                "layout": "group"
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Energy by wind farm and day"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "stopped_turbines",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "stopped",
+                  "fields": [
+                    {
+                      "name": "day",
+                      "expression": "`day`"
+                    },
+                    {
+                      "name": "park",
+                      "expression": "`park`"
+                    },
+                    {
+                      "name": "turbine_id",
+                      "expression": "`turbine_id`"
+                    },
+                    {
+                      "name": "operating_hours",
+                      "expression": "`operating_hours`"
+                    },
+                    {
+                      "name": "energy_mwh",
+                      "expression": "`energy_mwh`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 1,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "day",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 0,
+                    "title": "day",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "day"
+                  },
+                  {
+                    "fieldName": "park",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 1,
+                    "title": "park",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "park"
+                  },
+                  {
+                    "fieldName": "turbine_id",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "string",
+                    "displayAs": "string",
+                    "visible": true,
+                    "order": 2,
+                    "title": "turbine_id",
+                    "allowSearch": false,
+                    "alignContent": "left",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "turbine_id"
+                  },
+                  {
+                    "fieldName": "operating_hours",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 3,
+                    "title": "operating_hours",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "operating_hours"
+                  },
+                  {
+                    "fieldName": "energy_mwh",
+                    "booleanValues": [
+                      "false",
+                      "true"
+                    ],
+                    "imageUrlTemplate": "{{ @ }}",
+                    "imageTitleTemplate": "{{ @ }}",
+                    "imageWidth": "",
+                    "imageHeight": "",
+                    "linkUrlTemplate": "{{ @ }}",
+                    "linkTextTemplate": "{{ @ }}",
+                    "linkTitleTemplate": "{{ @ }}",
+                    "linkOpenInNewTab": true,
+                    "type": "float",
+                    "displayAs": "float",
+                    "visible": true,
+                    "order": 4,
+                    "title": "energy_mwh",
+                    "allowSearch": false,
+                    "alignContent": "right",
+                    "allowHTML": false,
+                    "highlightLinks": false,
+                    "useMonospaceFont": false,
+                    "preserveWhitespace": false,
+                    "displayName": "energy_mwh"
+                  }
+                ]
+              },
+              "invisibleColumns": [],
+              "allowHTMLByDefault": false,
+              "itemsPerPage": 25,
+              "paginationSize": "default",
+              "condensed": true,
+              "withRowNumber": false,
+              "frame": {
+                "showTitle": true,
+                "title": "Turbines that did not run 24 hours"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 3,
+            "width": 3,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ]
+}

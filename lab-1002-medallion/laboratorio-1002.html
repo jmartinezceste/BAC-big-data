@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Topic 10 · Lab 2 · From bronze to gold</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+.ph{margin:12px 0 0;padding:14px 16px;border:2px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13.5px}
+.ph code{font-weight:600}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+.json{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px 16px;margin:12px 0;
+ font:12.5px/1.6 Consolas,"SF Mono",Menlo,monospace;overflow-x:auto;white-space:pre}
+.json .k{color:#93c5fd} .json .s{color:#86efac} .json .n{color:#fcd34d} .json .c{color:#7c8ba1}
+.tag{display:inline-block;margin-left:10px;padding:0 8px;border-radius:10px;
+ font:600 11px/18px "Segoe UI",system-ui,sans-serif;vertical-align:1px}
+.tag.st{background:#1d4ed8;color:#fff} .tag.ar{background:#7e22ce;color:#fff}
+.tag.es{background:#475569;color:#fff} .tag.b64{background:#b45309;color:#fff}
+.tag.ok{background:var(--ok);color:#fff}
+.flujo{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0 18px}
+.flujo .caja{flex:1 1 150px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;
+ font-size:13.5px;background:#fff}
+.flujo .caja b{display:block;color:var(--acc);margin-bottom:3px}
+.flujo .caja.on{border-color:var(--acc);background:var(--acc-soft)}
+.flujo .flecha{align-self:center;color:var(--muted);font-size:18px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> of 29 steps completed</span>
+  <button id="reset">Start over</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Topic 10 · Lab 2</p>
+  <h1>From bronze to gold</h1>
+  <p class="sub">Wednesday at <b>Ventolia Energy</b>. The daily report works, and now management wants to know how the turbines really behave, from the SCADA readings every 10 minutes. Those readings arrive raw and with errors. You will read the code of a classic <b>medallion</b> pipeline (bronze, silver, gold) and orchestrate it with a job that runs three loads in parallel.</p>
+  <div class="meta"><span><b>7 blocks</b> · 29 steps</span><span>About 55 minutes</span><span>Every snippet copies with one click</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Set up the environment</a><a href="#b2"><span>1</span>Read the bronze notebook</a><a href="#b3"><span>2</span>Read the silver notebook</a><a href="#b4"><span>3</span>Read the gold SQL</a><a href="#b5"><span>4</span>Build the job</a><a href="#b6"><span>5</span>Run and check</a><a href="#b7"><span>6</span>Break it and repair it</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Set up the environment<span class="min">5 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>You will use the same Git folder as in lab 1001. A setup notebook creates the <code>lab1002</code> catalog with <b>one schema per medallion layer</b> and drops three raw files into a volume.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>In <b>Workspace</b>, open your <b>BAC-big-data</b> Git folder, click the branch name at the top and click <b>Pull</b>.</span></label><div class="cal warn"><b class="etq">Watch out</b>If you never cloned the repository, follow block 0 of lab 1001 first.</div><div class="ph">📷 Screenshot to take: <code>1002-01-git-pull.png</code></div><div class="cal ok"><b class="etq">You should see</b>A new folder <b>lab-1002-medallion</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Open <b>lab-1002-medallion</b> → <b>00_setup_environment</b>, check that it is attached to <b>Serverless</b> and click <b>Run all</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-02-setup-run-all.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>Read the output of the last cells.</span></label><div class="ph">📷 Screenshot to take: <code>1002-03-setup-salida.png</code></div><div class="cal ok"><b class="etq">You should see</b>Four schemas, <code>landing</code>, <code>bronze</code>, <code>silver</code> and <code>gold</code>, and three files copied: <code>scada_2026-10-21.csv</code>, <code>turbines.csv</code> and <code>work_orders.csv</code>.</div></li><div class="cal help"><b class="etq">If something fails</b>If <b>Pull</b> reports a conflict, you probably edited a file of the repository in lab 1001. Discard your changes in the Git dialog and pull again.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Read the bronze notebook<span class="min">8 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b><b>Bronze</b> is the faithful copy of what arrived: no cleaning and nothing thrown away. It only adds <b>metadata</b> about the load, so that every row says when it was loaded, from which file and by which job run.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Open <b>src</b> → <b>01_bronze</b>. Read the first code cell: the notebook does not know which source it loads until someone tells it.</span></label><div class="ph">📷 Screenshot to take: <code>1002-04-bronze-parametros.png</code></div><div class="cal ok"><b class="etq">You should see</b>Two text boxes at the top of the notebook, <b>source</b> and <b>run_id</b>: the widgets the cell creates.</div></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code># Values sent by the job task. The defaults let you run the notebook by hand.
+dbutils.widgets.text(&quot;source&quot;, &quot;scada&quot;)      # turbines, scada or work_orders
+dbutils.widgets.text(&quot;run_id&quot;, &quot;manual&quot;)     # the job sends {{job.run_id}}
+
+SOURCE = dbutils.widgets.get(&quot;source&quot;)
+RUN_ID = dbutils.widgets.get(&quot;run_id&quot;)
+CATALOG = &quot;lab1002&quot;
+
+print(f&quot;Loading source &#x27;{SOURCE}&#x27; (run {RUN_ID})&quot;)</code></pre></div><p>The job will run this same notebook three times, each with a different <code>source</code>. <code>run_id</code> will receive the run identifier, so you can trace every row back to the run that loaded it.</p><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Read the next two code cells: how the files are read and which columns are added.</span></label></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>from pyspark.sql import functions as F
+
+raw = (spark.read
+       .option(&quot;header&quot;, &quot;true&quot;)
+       .csv(f&quot;/Volumes/{CATALOG}/landing/data/{SOURCE}*.csv&quot;))
+
+print(f&quot;{raw.count()} rows read&quot;)
+raw.printSchema()</code></pre></div><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>bronze = (raw
+          .withColumn(&quot;_ingested_at&quot;, F.current_timestamp())
+          .withColumn(&quot;_source_file&quot;, F.col(&quot;_metadata.file_name&quot;))
+          .withColumn(&quot;_job_run_id&quot;, F.lit(RUN_ID)))</code></pre></div><p>No <code>inferSchema</code>: every column stays as text, exactly as in the file. <code>_metadata.file_name</code> is a hidden column Spark offers on any file it reads.</p><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span>Read the last cell: where and how bronze is written.</span></label></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>table = f&quot;{CATALOG}.bronze.{SOURCE}&quot;
+
+(bronze.write
+       .mode(&quot;overwrite&quot;)
+       .option(&quot;overwriteSchema&quot;, &quot;true&quot;)
+       .saveAsTable(table))
+
+print(f&quot;{spark.table(table).count()} rows in {table}&quot;)
+display(spark.table(table).limit(5))</code></pre></div><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span>Run the notebook by hand to see it work: <b>Run all</b>, with the default <code>source = scada</code>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-05-bronze-salida.png</code></div><div class="cal ok"><b class="etq">You should see</b><code>5206 rows read</code>, a schema where every column is <code>string</code>, and a table with three extra columns: <code>_ingested_at</code>, <code>_source_file = scada_2026-10-21.csv</code> and <code>_job_run_id = manual</code>.</div></li><div class="cal chk"><b class="etq">Check your understanding</b>Bronze keeps 5,206 readings even though some are clearly wrong. Why is it useful to keep them instead of cleaning them here?</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Read the silver notebook<span class="min">10 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b><b>Silver</b> is data you can trust: real types, quality rules applied and the bad rows removed. Do not run this notebook by hand: it needs the three bronze tables, and the job will create them.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Open <b>src</b> → <b>02_silver</b>. The small sources only need types:</span></label></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>turbines = (spark.table(f&quot;{CATALOG}.bronze.turbines&quot;)
+            .select(&quot;turbine_id&quot;, &quot;park_id&quot;, &quot;park&quot;, &quot;model&quot;,
+                    F.col(&quot;rated_power_mw&quot;).cast(&quot;double&quot;).alias(&quot;rated_power_mw&quot;)))
+
+work_orders = (spark.table(f&quot;{CATALOG}.bronze.work_orders&quot;)
+               .select(&quot;work_order_id&quot;, &quot;turbine_id&quot;, &quot;reason&quot;,
+                       F.to_timestamp(&quot;start_time&quot;).alias(&quot;start_time&quot;),
+                       F.to_timestamp(&quot;end_time&quot;).alias(&quot;end_time&quot;)))
+
+turbines.write.mode(&quot;overwrite&quot;).saveAsTable(f&quot;{CATALOG}.silver.turbines&quot;)
+work_orders.write.mode(&quot;overwrite&quot;).saveAsTable(f&quot;{CATALOG}.silver.work_orders&quot;)
+print(turbines.count(), &quot;turbines |&quot;, work_orders.count(), &quot;work orders&quot;)</code></pre></div><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span>The SCADA readings get types too. Note <code>rows_in</code>: it is the starting point of the count.</span></label></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>scada = (spark.table(f&quot;{CATALOG}.bronze.scada&quot;)
+         .select(F.to_timestamp(&quot;reading_time&quot;).alias(&quot;reading_time&quot;),
+                 &quot;turbine_id&quot;,
+                 F.col(&quot;wind_speed_ms&quot;).cast(&quot;double&quot;).alias(&quot;wind_speed_ms&quot;),
+                 F.col(&quot;power_kw&quot;).cast(&quot;double&quot;).alias(&quot;power_kw&quot;),
+                 &quot;status&quot;, &quot;_ingested_at&quot;, &quot;_job_run_id&quot;))
+
+rows_in = scada.count()
+print(rows_in, &quot;readings from bronze&quot;)</code></pre></div><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span>Now the heart of the notebook: five rules, each applied to the result of the previous one. Read them with the table above the cell.</span></label><div class="ph">📷 Screenshot to take: <code>1002-06-silver-reglas.png</code></div></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>r1 = scada.dropDuplicates([&quot;turbine_id&quot;, &quot;reading_time&quot;])
+r2 = r1.filter(F.col(&quot;wind_speed_ms&quot;).isNotNull() &amp; F.col(&quot;power_kw&quot;).isNotNull())
+r3 = r2.filter(F.col(&quot;wind_speed_ms&quot;).between(0, 40))
+r4 = r3.join(turbines.select(&quot;turbine_id&quot;, &quot;rated_power_mw&quot;), &quot;turbine_id&quot;)
+r5 = r4.filter(F.col(&quot;power_kw&quot;).between(0, F.col(&quot;rated_power_mw&quot;) * 1000 * 1.05))
+
+clean = r5.drop(&quot;rated_power_mw&quot;)</code></pre></div><div class="tabla"><table><thead><tr><th>Rule</th><th>What it removes in today&#x27;s data</th></tr></thead><tbody><tr><td>1 · <code>dropDuplicates</code></td><td>Readings sent twice by the SCADA export</td></tr><tr><td>2 · <code>isNotNull</code></td><td>Readings without wind or power</td></tr><tr><td>3 · <code>between(0, 40)</code></td><td>Wind of 80 m/s: a broken anemometer</td></tr><tr><td>4 · <code>join</code> with the turbines</td><td>Readings from <code>P04-WTG01</code>, a turbine that is not in the master data</td></tr><tr><td>5 · power ≤ 105 % of rated</td><td>Readings of 99,999 kW</td></tr></tbody></table></div><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span>Read the last two cells: the report of what each rule removed, and the write.</span></label></li><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copy</button></div><pre><code>counts = [rows_in] + [df.count() for df in (r1, r2, r3, r4, r5)]
+rules = [&quot;1 · duplicates&quot;, &quot;2 · empty values&quot;, &quot;3 · impossible wind&quot;,
+         &quot;4 · unknown turbine&quot;, &quot;5 · impossible power&quot;]
+
+report = spark.createDataFrame(
+    [(rule, counts[i] - counts[i + 1]) for i, rule in enumerate(rules)]
+    + [(&quot;rows kept&quot;, counts[-1])],
+    [&quot;rule&quot;, &quot;rows&quot;])
+display(report)</code></pre></div><div class="cal chk"><b class="etq">Check your understanding</b>Rule 4 is a <code>join</code>. What happens to the readings of a new turbine that has not been added to <code>turbines.csv</code> yet? Is that what the business wants? (Lab 1003 answers this with a quarantine table.)</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Read the gold SQL<span class="min">5 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b><b>Gold</b> answers business questions. It only reads silver and groups it. It is plain SQL, and the job will run it on a SQL warehouse, not on the notebooks' serverless compute: each task chooses its own compute.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>In <b>lab-1002-medallion</b> → <b>src</b>, open <b>03_gold.sql</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-07-gold-sql.png</code></div></li><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>-- 1002 · 03 · Gold: the numbers the operations committee reads
+--
+-- Gold answers business questions. It reads only silver (clean, typed data)
+-- and groups it. Each table is rebuilt in full on every run.
+
+-- 1 · One row per wind farm and day
+--     Readings arrive every 10 minutes, so each power value in kW lasts 1/6 h:
+--     energy in MWh = sum(power_kw) / 6 / 1000.
+CREATE OR REPLACE TABLE lab1002.gold.park_daily AS
+SELECT
+  t.park,
+  CAST(s.reading_time AS DATE)                                     AS day,
+  count(DISTINCT s.turbine_id)                                     AS turbines,
+  round(sum(s.power_kw) / 6 / 1000, 1)                             AS energy_mwh,
+  -- Share of readings in which the turbine was available (not in maintenance)
+  round(100 * avg(CASE WHEN s.status = &#x27;MAINTENANCE&#x27; THEN 0 ELSE 1 END), 1)
+                                                                   AS availability_pct,
+  -- Energy produced against the maximum the turbines could have produced
+  round(100 * sum(s.power_kw) / 1000 / sum(t.rated_power_mw), 1)   AS capacity_factor_pct
+FROM lab1002.silver.scada AS s
+JOIN lab1002.silver.turbines AS t USING (turbine_id)
+GROUP BY t.park, CAST(s.reading_time AS DATE);
+
+-- 2 · One row per maintenance stop
+CREATE OR REPLACE TABLE lab1002.gold.maintenance_stops AS
+SELECT
+  w.work_order_id,
+  t.park,
+  w.turbine_id,
+  w.reason,
+  round((unix_timestamp(w.end_time) - unix_timestamp(w.start_time)) / 3600, 1) AS hours_stopped
+FROM lab1002.silver.work_orders AS w
+JOIN lab1002.silver.turbines AS t USING (turbine_id);
+</code></pre></div><p>Three formulas worth a second look: <b>energy</b> (each 10-minute reading in kW lasts 1/6 of an hour), <b>availability</b> (share of readings not in maintenance) and <b>capacity factor</b> (energy produced against what the turbines could have produced at full power).</p></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>Build the job<span class="min">12 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>Five tasks. The three bronze loads do not depend on each other, so they run in parallel. Silver waits for all three. Gold waits for silver.</div><div class="cal info"><pre style="margin:0;font-size:14px">bronze_turbines ─┐
+bronze_scada ────┼──► silver ──► gold
+bronze_orders ───┘</pre></div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span><b>Jobs &amp; Pipelines</b> → <b>Create</b> → <b>Job</b>, and rename it:</span></label><div class="urlbox"><code>1002-medallion</code><button class="copy">Copy</button></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>On the empty canvas choose <b>Notebook</b>. Task name below, <b>Path</b> = <b>lab-1002-medallion</b> → <b>src</b> → <b>01_bronze</b>, <b>Compute</b> = <b>Serverless</b>. Under <b>Parameters</b> click <b>Add</b> twice: <code>source</code> = <code>scada</code> and <code>run_id</code> = the value below. Click <b>Create task</b>.</span></label><div class="urlbox"><code>bronze_scada</code><button class="copy">Copy</button></div><div class="cal info2"><b class="etq">Why this</b><code>{{job.run_id}}</code> is a <b>dynamic value reference</b>: the job replaces it with the real run id each time it runs.</div><div class="ph">📷 Screenshot to take: <code>1002-08-tarea-bronze-config.png</code></div></li><div class="codebox"><div class="codebar"><span>Text</span><button class="copy">Copy</button></div><pre><code>{{job.run_id}}</code></pre></div><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span>Select <b>bronze_scada</b> on the canvas and click the <b>clone</b> icon in the small toolbar above it. Rename the copy <code>bronze_turbines</code> and change its parameter to <code>source</code> = <code>turbines</code>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-09-clonar-tarea.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span>In the copy, look at <b>Depends on</b>: if it says <b>bronze_scada</b>, remove it. Click <b>Save task</b>.</span></label><div class="cal warn"><b class="etq">Watch out</b>This is the most common mistake of the lab. With that dependency the loads would run one after another instead of in parallel.</div><div class="ph">📷 Screenshot to take: <code>1002-10-depends-on-vacio.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span>Clone it once more for the orders: name <code>bronze_orders</code>, <code>source</code> = <code>work_orders</code>, no dependencies.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span><b>Add task</b> → <b>Notebook</b>: name <code>silver</code>, Path <b>src</b> → <b>02_silver</b>, Compute <b>Serverless</b>, no parameters. In <b>Depends on</b> select <b>the three bronze tasks</b>. Click <b>Create task</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-11-tarea-silver-depends.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span><b>Add task</b> → <b>SQL file</b>: name <code>gold</code>, Path <b>src/03_gold.sql</b>, SQL warehouse <b>Serverless Starter Warehouse</b>, Depends on <b>silver</b>. Click <b>Create task</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-12-tarea-gold-sql.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Look at the whole canvas.</span></label><div class="ph">📷 Screenshot to take: <code>1002-13-graph-completo.png</code></div><div class="cal ok"><b class="etq">You should see</b>Three bronze tasks side by side, all joined to <b>silver</b>, and <b>silver</b> joined to <b>gold</b>.</div></li><div class="cal help"><b class="etq">If something fails</b>If a task shows an arrow you did not want, select it and remove that task from <b>Depends on</b>. If the clone icon is not there, create the task again with <b>Add task</b> → <b>Notebook</b>.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>Run and check<span class="min">8 min</span></h2><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Click <b>Run now</b>, open the run and choose the <b>Timeline</b> view.</span></label><div class="ph">📷 Screenshot to take: <code>1002-14-timeline-paralelo.png</code></div><div class="cal ok"><b class="etq">You should see</b>The three bronze bars start at the same time; <b>silver</b> starts when the last of them ends, and <b>gold</b> after silver.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span>Click the task <b>silver</b> in the run and scroll to the rule report.</span></label><div class="ph">📷 Screenshot to take: <code>1002-15-silver-report.png</code></div><div class="cal ok"><b class="etq">You should see</b>duplicates 12 · empty values 8 · impossible wind 5 · unknown turbine 10 · impossible power 6 · <b>rows kept 5165</b>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span><b>Queries</b> → <b>Create query</b>, paste this and click <b>Run all</b>.</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>SELECT _source_file, _job_run_id,
+       min(_ingested_at) AS loaded_at, count(*) AS rows_loaded
+FROM lab1002.bronze.scada
+GROUP BY ALL;</code></pre></div><div class="ph">📷 Screenshot to take: <code>1002-16-bronze-metadatos.png</code></div><div class="cal ok"><b class="etq">You should see</b>One row: <code>scada_2026-10-21.csv</code>, 5,206 rows, and a <code>_job_run_id</code> that is the <b>Run ID</b> of your run (no longer <code>manual</code>).</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p24"><span>Now the result the committee reads:</span></label><div class="codebox"><div class="codebar"><span>SQL</span><button class="copy">Copy</button></div><pre><code>SELECT * FROM lab1002.gold.park_daily ORDER BY park;
+
+SELECT * FROM lab1002.gold.maintenance_stops ORDER BY hours_stopped DESC;</code></pre></div><div class="ph">📷 Screenshot to take: <code>1002-17-gold-park-daily.png</code></div><div class="cal ok"><b class="etq">You should see</b>High Ridge 422.1 MWh, 97.9 % available, capacity factor 35.0 %; Long Plains 249.2 · 97.9 · 20.7; North Cape 457.7 · 98.4 · 53.2. And three stops: two of 6.0 hours and one of 4.5.</div></li></ol></section><section class="bloque" id="b7"><h2><span class="num">6</span>Break it and repair it<span class="min">7 min</span></h2><div class="cal info"><b class="etq">What you are looking at</b>A typo in a parameter breaks one load. Instead of running the whole job again, <b>Repair run</b> runs only the task that failed and the ones that depend on it.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p25"><span>Open the task <b>bronze_orders</b>. Change its parameter to <code>source</code> = <code>work_order</code> (without the final <i>s</i>). In <b>Retries</b>, remove the retries if there are any. Click <b>Save task</b>.</span></label><div class="cal info2"><b class="etq">Why this</b>Notebook tasks on serverless are retried automatically. A typo is not a temporary error: retrying would only make you wait.</div><div class="ph">📷 Screenshot to take: <code>1002-18-parametro-roto.png</code></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p26"><span>Click <b>Run now</b> and open the run.</span></label><div class="ph">📷 Screenshot to take: <code>1002-19-run-fallido.png</code></div><div class="cal ok"><b class="etq">You should see</b><b>bronze_orders</b> in red, <b>bronze_scada</b> and <b>bronze_turbines</b> in green, and <b>silver</b> and <b>gold</b> not run: they depend on the failed task.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p27"><span>Click the failed task and read the error.</span></label><div class="ph">📷 Screenshot to take: <code>1002-20-error-detalle.png</code></div><div class="cal ok"><b class="etq">You should see</b>An error saying the path <code>…/work_order*.csv</code> does not exist.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p28"><span>Fix the parameter back to <code>work_orders</code> in the task and click <b>Save task</b>. Then return to the failed run and click <b>Repair run</b>.</span></label><div class="ph">📷 Screenshot to take: <code>1002-21-repair-run.png</code></div><div class="cal ok"><b class="etq">You should see</b>The dialog selects <b>bronze_orders</b>, <b>silver</b> and <b>gold</b>. The two bronze tasks that worked are not in the list.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p29"><span>Confirm the repair and wait.</span></label><div class="ph">📷 Screenshot to take: <code>1002-22-run-reparado.png</code></div><div class="cal ok"><b class="etq">You should see</b>The same run, now green. It keeps the first two bronze loads and adds a second attempt for the rest.</div></li><div class="cal chk"><b class="etq">Check your understanding</b>Repair run saved two bronze loads. In a real pipeline with fifty tasks and two hours of runtime, what does that mean?</div></ol></section>
+<div class="fin"><b>End of the lab</b>You have a medallion pipeline orchestrated by a job: three loads in parallel, a validation step that waits for all of them, and a gold layer on a SQL warehouse. When something breaks, you repair only what failed. In lab 1003 the pipeline starts by itself when a file arrives and decides what to do with the rows that cannot be fixed.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab1002en';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copied';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>
