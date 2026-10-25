@@ -1,8 +1,8 @@
--- 1001 · Load one day's production report into bronze
+-- 1001 · Load the production reports into bronze
 --
--- Job parameter: file (for example production_2026-10-19.csv).
--- Safe to re-run with the same file: REPLACE WHERE swaps the rows of that file
--- instead of appending them again.
+-- Reads every report in the volume. COPY INTO remembers which files it has
+-- already loaded: each run only adds the new ones, and running it twice by
+-- mistake adds nothing.
 
 CREATE TABLE IF NOT EXISTS lab1001.bronze.production (
   date              DATE,
@@ -18,23 +18,21 @@ CREATE TABLE IF NOT EXISTS lab1001.bronze.production (
   loaded_at         TIMESTAMP
 );
 
-INSERT INTO lab1001.bronze.production
-REPLACE WHERE source_file = :file
-SELECT
-  date,
-  park_id,
-  park,
-  turbine_id,
-  model,
-  rated_power_mw,
-  avg_wind_speed_ms,
-  operating_hours,
-  energy_mwh,
-  :file               AS source_file,
-  current_timestamp() AS loaded_at
-FROM read_files(
-  '/Volumes/lab1001/landing/data/' || :file,
-  format => 'csv',
-  header => true,
-  schema => 'date DATE, park_id STRING, park STRING, turbine_id STRING, model STRING, rated_power_mw DOUBLE, avg_wind_speed_ms DOUBLE, operating_hours DOUBLE, energy_mwh DOUBLE'
-);
+COPY INTO lab1001.bronze.production
+FROM (
+  SELECT
+    CAST(date AS DATE)                AS date,
+    park_id,
+    park,
+    turbine_id,
+    model,
+    CAST(rated_power_mw AS DOUBLE)    AS rated_power_mw,
+    CAST(avg_wind_speed_ms AS DOUBLE) AS avg_wind_speed_ms,
+    CAST(operating_hours AS DOUBLE)   AS operating_hours,
+    CAST(energy_mwh AS DOUBLE)        AS energy_mwh,
+    _metadata.file_name               AS source_file,
+    current_timestamp()               AS loaded_at
+  FROM '/Volumes/lab1001/landing/data/'
+)
+FILEFORMAT = CSV
+FORMAT_OPTIONS ('header' = 'true');
