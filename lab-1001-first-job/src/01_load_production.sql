@@ -1,8 +1,9 @@
 -- 1001 · Load the production reports into bronze
 --
--- Reads every report in the volume. COPY INTO remembers which files it has
--- already loaded: each run only adds the new ones, and running it twice by
--- mistake adds nothing.
+-- Reads every production report in the volume (PATTERN skips the alarms
+-- subfolder of part B). COPY INTO remembers which files it has already
+-- loaded: each run only adds the new ones, and running it twice by mistake
+-- adds nothing.
 
 CREATE TABLE IF NOT EXISTS lab1001.bronze.production (
   date              DATE,
@@ -35,4 +36,5 @@ FROM (
   FROM '/Volumes/lab1001/landing/data/'
 )
 FILEFORMAT = CSV
+PATTERN = 'production_*.csv'
 FORMAT_OPTIONS ('header' = 'true');
