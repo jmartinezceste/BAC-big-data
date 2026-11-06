@@ -1,0 +1,41 @@
+# Job 1001-production-report, parts A and B, exported from the demo workspace
+# (Jobs & Pipelines -> job -> (⋮) Edit as YAML).
+# Paths, warehouse_id and dashboard_id belong to that workspace: change them in another one.
+resources:
+  jobs:
+    1001_production_report:
+      name: 1001-production-report
+      trigger:
+        pause_status: PAUSED
+        file_arrival:
+          url: /Volumes/lab1001/landing/data/
+      tasks:
+        - task_key: load_production
+          sql_task:
+            file:
+              path: /Workspace/Users/test.data.jm@gmail.com/lab-1001-first-job/src/01_load_production.sql
+              source: WORKSPACE
+            warehouse_id: 05a06d3bc497d459
+        - task_key: refresh_report
+          depends_on:
+            - task_key: load_production
+          dashboard_task:
+            subscription:
+              attachment:
+                page_attachment: {}
+            warehouse_id: 05a06d3bc497d459
+            dashboard_id: 01f1d9bcda731bafa2de418255d4eea3
+        - task_key: ingest_alarms
+          notebook_task:
+            notebook_path: /Workspace/Users/test.data.jm@gmail.com/BAC-big-data/lab-1001-first-job/src/02_ingest_alarms
+            base_parameters:
+              file_format: json
+            source: WORKSPACE
+          environment_key: Default
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "6"
+      performance_target: PERFORMANCE_OPTIMIZED
