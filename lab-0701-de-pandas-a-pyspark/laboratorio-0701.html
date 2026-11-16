@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 07 · Laboratorio 1 · De pandas a PySpark</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 23 pasos completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 07 · Laboratorio 1</p>
+  <h1>De pandas a PySpark</h1>
+  <p class="sub">Ya sabes manipular datos con pandas. Este laboratorio traduce lo que ya haces, te enseña las tres o cuatro cosas que funcionan de otra manera, y termina con los mandos que en pandas directamente no existen. Los mismos datos, cargados en los dos mundos a la vez, para que compares línea a línea.</p>
+  <div class="meta"><span><b>45 min</b> aproximados</span><span><b>23 pasos</b> en 4 bloques</span><span>Sin ficheros ni catálogo: todo en memoria</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>El mismo dato, dos veces</a><a href="#b2"><span>1</span>Nivel 1 · Lo que ya sabes hacer</a><a href="#b3"><span>2</span>Nivel 2 · Lo que funciona distinto</a><a href="#b4"><span>3</span>Nivel 3 · Los mandos que pandas no tiene</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>El mismo dato, dos veces<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Todo el laboratorio se apoya en un truco: vas a tener las mismas filas en dos variables, <code>pdf</code> (el DataFrame de pandas que ya conoces) y <code>sdf</code> (el de Spark). Cada operación la vas a hacer en los dos, una debajo de la otra. Cuando algo se parezca, lo verás; cuando cambie, también.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral izquierda, luego <b>Create</b> y elige <b>Notebook</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Renombra el notebook a <b>0701-01-de-pandas-a-pyspark</b>, pulsando sobre su nombre arriba a la izquierda.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Arriba a la derecha, el cómputo <b>Serverless</b> conectado. No hace falta arrancar nada.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span><b>Celda 1.</b> Crea los datos en los dos mundos. Pega y ejecuta con <code>Mayús + Intro</code>.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+import pandas as pd
+from pyspark.sql import functions as F
+
+datos = [
+    (&quot;2026-01-05&quot;, &quot;Alfombrilla&quot;, &quot;Accesorios&quot;,     12,   7.50, &quot;España&quot;),
+    (&quot;2026-01-07&quot;, &quot;Monitor&quot;,     &quot;Pantallas&quot;,       1, 199.99, &quot;España&quot;),
+    (&quot;2026-01-09&quot;, &quot;Teclado&quot;,     &quot;Periféricos&quot;,     4,  25.99, &quot;Portugal&quot;),
+    (&quot;2026-01-12&quot;, &quot;Disco duro&quot;,  &quot;Almacenamiento&quot;,  6,  79.99, &quot;España&quot;),
+    (&quot;2026-01-15&quot;, &quot;Alfombrilla&quot;, &quot;Accesorios&quot;,     30,   7.50, &quot;México&quot;),
+    (&quot;2026-01-18&quot;, &quot;Monitor&quot;,     &quot;Pantallas&quot;,       2, 199.99, &quot;Portugal&quot;),
+    (&quot;2026-01-21&quot;, &quot;Auriculares&quot;, &quot;Audio&quot;,           8,  29.99, &quot;España&quot;),
+    (&quot;2026-01-24&quot;, &quot;Cable HDMI&quot;,  &quot;Accesorios&quot;,     25,  12.95, &quot;México&quot;),
+    (&quot;2026-01-27&quot;, &quot;Teclado&quot;,     &quot;Periféricos&quot;,     3,  25.99, &quot;España&quot;),
+    (&quot;2026-01-30&quot;, &quot;Altavoces&quot;,   &quot;Audio&quot;,           5,  45.00, &quot;Portugal&quot;),
+    (&quot;2026-02-02&quot;, &quot;Monitor&quot;,     &quot;Pantallas&quot;,       1, 199.99, &quot;México&quot;),
+    (&quot;2026-02-05&quot;, &quot;Memoria USB&quot;, &quot;Almacenamiento&quot;, 40,   9.99, &quot;España&quot;),
+]
+cols = [&quot;fecha&quot;, &quot;producto&quot;, &quot;categoria&quot;, &quot;cantidad&quot;, &quot;precio&quot;, &quot;pais&quot;]
+
+pdf = pd.DataFrame(datos, columns=cols)   # el mundo que ya conoces
+sdf = spark.createDataFrame(datos, cols)  # el mundo nuevo
+
+print(type(pdf))
+print(type(sdf))</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Fíjate en que <code>spark.createDataFrame</code> recibe exactamente lo mismo que <code>pd.DataFrame</code>: una lista de tuplas y una lista de nombres de columna. La puerta de entrada es idéntica.</div><div class="cal ok"><b class="etq">Deberías ver</b>Dos tipos distintos: <code>pandas.core.frame.DataFrame</code> y <code>pyspark.sql.dataframe.DataFrame</code>. Mismo nombre de clase, mundos distintos.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <code>spark</code> no está definido, es que el notebook no está conectado a un cómputo. Mira arriba a la derecha y espera a que el Serverless se ponga en verde.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Nivel 1 · Lo que ya sabes hacer<span class="min">12 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Empezamos por la parte tranquila. Estas siete operaciones son el 80&nbsp;% de lo que haces un día normal con pandas, y en PySpark son <b>la misma idea con otro nombre</b>. Si te quedas solo con este bloque, ya puedes trabajar.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span><b>Ver las primeras filas.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf.head(5)
+
+# PySpark
+sdf.show(5)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>En Databricks, <code>display(sdf)</code> te da la misma tabla pero interactiva, con filtros y gráficas. <code>show()</code> es la versión de texto plano, la que funciona en cualquier Spark.</div><div class="cal ok"><b class="etq">Deberías ver</b>Las mismas cinco filas dos veces. La de pandas sale con índice (0, 1, 2…); la de Spark, sin él. Guarda ese detalle: vuelve en el nivel 2.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span><b>Ver los tipos de cada columna.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf.dtypes
+
+# PySpark
+sdf.printSchema()</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Spark ha inferido <code>string</code>, <code>bigint</code> y <code>double</code>. Y marca cada columna como <code>nullable = true</code> — algo que pandas ni menciona.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span><b>Contar filas.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+len(pdf)
+
+# PySpark
+sdf.count()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Parecen lo mismo, pero no lo son. <code>len(pdf)</code> lee un número que pandas ya tenía guardado. <code>sdf.count()</code> lanza un trabajo de verdad que recorre los datos. Con 12 filas no lo notas; con 300 millones, sí.</div><div class="cal ok"><b class="etq">Deberías ver</b>12 en los dos casos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span><b>Seleccionar columnas.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf[[&quot;producto&quot;, &quot;precio&quot;]]
+
+# PySpark
+sdf.select(&quot;producto&quot;, &quot;precio&quot;).show()</code></pre></div><div class="cal warn"><b class="etq">Ojo</b>En pandas van dentro de una lista y con dobles corchetes. En Spark van como argumentos sueltos de <code>select()</code>. Es la confusión número uno de la primera semana.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span><b>Filtrar filas.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf[pdf[&quot;cantidad&quot;] &gt; 10]
+
+# PySpark
+sdf.filter(sdf[&quot;cantidad&quot;] &gt; 10).show()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>filter()</code> y <code>where()</code> son exactamente lo mismo en PySpark: dos nombres para el mismo método. <code>where</code> existe para que quien venga de SQL se sienta en casa.</div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro filas: Alfombrilla ×12, Alfombrilla ×30, Cable HDMI ×25 y Memoria USB ×40.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span><b>Ordenar.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf.sort_values(&quot;precio&quot;, ascending=False)
+
+# PySpark
+sdf.orderBy(F.desc(&quot;precio&quot;)).show()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Ese <code>F.desc()</code> es tu primer contacto con <code>functions</code>, el módulo que importamos como <code>F</code>. Casi todo lo que en pandas es un parámetro (<code>ascending=False</code>), en Spark es una función.</div><div class="cal ok"><b class="etq">Deberías ver</b>Los tres Monitor arriba, a 199,99.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span><b>Agrupar y agregar.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas
+pdf.groupby(&quot;categoria&quot;)[&quot;cantidad&quot;].sum()
+
+# PySpark
+sdf.groupBy(&quot;categoria&quot;).agg(F.sum(&quot;cantidad&quot;)).show()</code></pre></div><div class="cal warn"><b class="etq">Ojo</b><code>groupby</code> en pandas, <code>groupBy</code> con B mayúscula en Spark. Vas a escribirlo mal muchas veces.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>Accesorios</code> con 67 unidades, el más vendido. Los mismos números en las dos versiones.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>De las siete operaciones que acabas de hacer, ¿cuál dirías que es la única que en Spark hace un trabajo de verdad sobre los datos, y cuáles solo han descrito lo que quieres? La respuesta está en el bloque siguiente.</div></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Nivel 2 · Lo que funciona distinto<span class="min">13 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Aquí es donde se rompe el modelo mental de pandas. No son más métodos que memorizar: son <b>cuatro ideas</b> que cambian cómo piensas el código. Si estas cuatro te entran, el resto de PySpark se deduce solo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span><b>Idea 1 · Spark es perezoso.</b> Ejecuta esto y mira cuánto tarda.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas: esto calcula y devuelve datos
+caro_pd = pdf[pdf[&quot;precio&quot;] &gt; 100]
+print(&quot;pandas ya tiene&quot;, len(caro_pd), &quot;filas&quot;)
+
+# PySpark: esto NO calcula nada todavía
+caro_sdf = sdf.filter(F.col(&quot;precio&quot;) &gt; 100)
+print(&quot;spark devuelve:&quot;, caro_sdf)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>En pandas, cada línea se ejecuta cuando la escribes. En Spark, <code>filter</code> solo <b>anota</b> lo que quieres. Nada se calcula hasta que pides un resultado de verdad: eso se llama una <b>acción</b>, y son <code>show()</code>, <code>count()</code>, <code>collect()</code>, <code>toPandas()</code>, escribir una tabla… Todo lo demás son <b>transformaciones</b>, y son gratis.</div><div class="cal ok"><b class="etq">Deberías ver</b>pandas imprime <code>3 filas</code>. Spark imprime un <code>DataFrame[fecha: string, ...]</code> — la descripción de un plan, no unos datos.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span>Ahora dispara la acción y observa la diferencia de tiempo.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+caro_sdf.show()</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Ahora sí salen las tres filas de Monitor. Y esta celda ha tardado bastante más que la anterior: es donde ha ocurrido el trabajo de verdad.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span><b>Idea 2 · No se modifica, se transforma.</b> Prueba primero la forma de pandas — y espera el error.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# En pandas esto es lo normal:
+pdf[&quot;total&quot;] = pdf[&quot;cantidad&quot;] * pdf[&quot;precio&quot;]
+pdf.head(3)
+
+# En Spark esto NO funciona. Descoméntalo si quieres verlo fallar:
+# sdf[&quot;total&quot;] = sdf[&quot;cantidad&quot;] * sdf[&quot;precio&quot;]</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Un DataFrame de Spark es <b>inmutable</b>: no se le pueden añadir columnas por asignación, y no existe <code>inplace=True</code>. Cada operación devuelve un DataFrame <b>nuevo</b>. Por eso el código de PySpark se escribe encadenado.</div><div class="cal warn"><b class="etq">Ojo</b>Esta es la costumbre de pandas que más cuesta soltar, y la que más errores raros provoca al empezar.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span>La forma correcta en Spark: <code>withColumn</code>.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+sdf = sdf.withColumn(&quot;total&quot;, F.col(&quot;cantidad&quot;) * F.col(&quot;precio&quot;))
+sdf.select(&quot;producto&quot;, &quot;cantidad&quot;, &quot;precio&quot;, &quot;total&quot;).show(5)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Fíjate en el <code>sdf = sdf.withColumn(...)</code>: hay que <b>reasignar</b>, porque el original no se toca. Si te olvidas del <code>sdf =</code>, la columna se calcula, se devuelve y se pierde.</div><div class="cal ok"><b class="etq">Deberías ver</b>La columna <code>total</code>, con 90.0 en la primera fila (12 × 7,50).</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span><b>Idea 3 · <code>F.col()</code>: la columna como expresión.</b> Mira qué devuelve cada una.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas: una Serie, con los valores dentro
+print(pdf[&quot;precio&quot;].head(3).tolist())
+
+# PySpark: una expresión que todavía no se ha calculado
+print(F.col(&quot;precio&quot;))
+print(F.col(&quot;precio&quot;) * 2)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>En pandas, <code>pdf["precio"]</code> <b>son</b> los datos. En Spark, <code>F.col("precio")</code> es una <b>receta</b>: «la columna que se llama precio». Por eso puedes multiplicarla por 2 sin que exista ningún dato todavía. Entender esto es entender por qué Spark puede optimizar tu código antes de ejecutarlo.</div><div class="cal ok"><b class="etq">Deberías ver</b>pandas imprime <code>[7.5, 199.99, 25.99]</code>. Spark imprime <code>Column&lt;'precio'&gt;</code> y <code>Column&lt;'(precio * 2)'&gt;</code> — descripciones, no valores.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span><b>Idea 4 · <code>F.lit()</code>: envolver los valores fijos.</b> Prueba primero sin él.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# Esto falla: Spark espera una columna, y le das un texto suelto
+# sdf.withColumn(&quot;moneda&quot;, &quot;EUR&quot;).show(3)
+
+# Así sí: F.lit() convierte un valor fijo en una columna
+sdf.withColumn(&quot;moneda&quot;, F.lit(&quot;EUR&quot;)).select(&quot;producto&quot;, &quot;moneda&quot;).show(3)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>F.lit()</code> significa <i>literal</i>. Todo lo que <code>withColumn</code> recibe tiene que ser una <b>columna</b>; un texto o un número sueltos no lo son, así que hay que envolverlos para convertir «EUR» en «una columna que vale EUR en todas las filas». En pandas esto es automático: <code>pdf["moneda"] = "EUR"</code> y ya está.</div><div class="cal warn"><b class="etq">Ojo</b>Cuando veas el error <code>Column is not iterable</code> o <code>col should be Column</code>, casi siempre te falta un <code>F.lit()</code>.</div><div class="cal ok"><b class="etq">Deberías ver</b>Tres filas con <code>EUR</code> en la columna nueva.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span><b>La consecuencia incómoda: no hay índice.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# En pandas esto es el pan de cada día:
+print(pdf.loc[0, &quot;producto&quot;])
+print(pdf.iloc[3])
+
+# En Spark no existe .loc, ni .iloc, ni set_index().
+# Lo más parecido es pedir las primeras n filas:
+print(sdf.take(1))</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Un DataFrame de Spark está repartido entre varias máquinas, así que <b>no hay una «fila 3»</b>: depende de qué trozo mires y en qué orden llegaron. Si necesitas un orden, lo pides explícitamente con <code>orderBy</code>; si necesitas identificar filas, usa una columna clave, no la posición.</div><div class="cal ok"><b class="etq">Deberías ver</b>pandas responde <code>Alfombrilla</code> sin dudar. Spark te devuelve una lista con un <code>Row(...)</code> — y no te promete que sea siempre el mismo.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si alguna celda de este bloque te da un error que no entiendes, salta a la siguiente: los errores de aquí son intencionados y están comentados. Lo importante es haber visto por qué fallan, no arreglarlos.</div><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Has visto que <code>filter</code> no calcula nada y que <code>show</code> sí. Si encadenas diez transformaciones y después llamas a <code>count()</code>, ¿cuántas veces se recorren los datos?</div></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Nivel 3 · Los mandos que pandas no tiene<span class="min">13 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Hasta aquí has traducido. Ahora vienen cuatro herramientas que <b>no tienen equivalente cómodo</b> en pandas, y que son las que hacen que merezca la pena escribir PySpark en vez de hacerlo todo en SQL o en pandas.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span><b><code>when / otherwise</code>: el <code>if</code> por filas.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# pandas: normalmente con np.where o con .apply()
+pdf[&quot;gama&quot;] = pdf[&quot;precio&quot;].apply(lambda p: &quot;alta&quot; if p &gt; 100 else &quot;baja&quot;)
+
+# PySpark: when / otherwise
+sdf = sdf.withColumn(
+    &quot;gama&quot;,
+    F.when(F.col(&quot;precio&quot;) &gt; 100, &quot;alta&quot;).otherwise(&quot;baja&quot;)
+)
+sdf.select(&quot;producto&quot;, &quot;precio&quot;, &quot;gama&quot;).show(5)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Aquí hay una lección escondida: en Spark <b>evita <code>.apply()</code> con funciones de Python</b>. Obliga a sacar cada fila de Spark, pasarla por Python y devolverla, y eso tira abajo todo el rendimiento. <code>when/otherwise</code> se ejecuta dentro del motor, sin salir.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>Monitor</code> como <code>alta</code> y el resto como <code>baja</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span><b><code>F.expr()</code>: escribir SQL dentro de Python.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+sdf.select(
+    &quot;producto&quot;,
+    &quot;precio&quot;,
+    F.expr(&quot;CASE WHEN precio &gt; 100 THEN &#x27;alta&#x27; ELSE &#x27;baja&#x27; END AS gama_sql&quot;),
+    F.expr(&quot;ROUND(cantidad * precio, 2) AS total_sql&quot;)
+).show(5)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>F.expr()</code> es la puerta de escape: le pasas un trozo de SQL como texto y Spark lo entiende igual que si lo hubieras escrito con la API. Sirve para lo que en la API queda largo, y para traducir consultas que ya tenías escritas en SQL.</div><div class="cal ok"><b class="etq">Deberías ver</b>Las mismas dos columnas del paso anterior, calculadas con SQL escrito dentro de un <code>select</code> de Python.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span>Su versión atajo, cuando <b>todo</b> el select es SQL: <code>selectExpr</code>.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+sdf.selectExpr(
+    &quot;producto&quot;,
+    &quot;cantidad * precio AS total&quot;,
+    &quot;upper(pais) AS pais_mayus&quot;
+).show(5)</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Las tres columnas, con el país en mayúsculas.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span><b>Window functions: agregar sin perder las filas.</b> Esto en pandas existe, pero es notablemente más incómodo.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql import Window
+
+ventana = Window.partitionBy(&quot;categoria&quot;).orderBy(F.desc(&quot;total&quot;))
+
+sdf.withColumn(&quot;puesto&quot;, F.row_number().over(ventana)) \
+   .select(&quot;categoria&quot;, &quot;producto&quot;, &quot;total&quot;, &quot;puesto&quot;) \
+   .orderBy(&quot;categoria&quot;, &quot;puesto&quot;) \
+   .show()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Un <code>groupBy</code> te devuelve <b>una fila por grupo</b> y pierdes el detalle. Una <b>ventana</b> calcula lo mismo pero <b>deja todas las filas en su sitio</b>, añadiendo el resultado como una columna más. Es la herramienta para rankings, acumulados y comparaciones contra el propio grupo.</div><div class="cal ok"><b class="etq">Deberías ver</b>Dentro de cada categoría, los productos numerados 1, 2, 3… por importe. Ninguna fila ha desaparecido.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p22"><span><b>El mismo objeto, en SQL.</b> Registra el DataFrame como vista y consúltalo.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+sdf.createOrReplaceTempView(&quot;ventas&quot;)
+
+spark.sql(&quot;&quot;&quot;
+    SELECT pais,
+           ROUND(SUM(total), 2) AS facturado
+    FROM ventas
+    GROUP BY pais
+    ORDER BY facturado DESC
+&quot;&quot;&quot;).show()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>No hay conversión ni copia: es <b>el mismo DataFrame</b>, consultado con otro lenguaje. Puedes empezar en Python, pasar a SQL para la parte que te salga mejor en SQL, y volver. En pandas esto no existe sin montar una base de datos aparte.</div><div class="cal ok"><b class="etq">Deberías ver</b>Tres países ordenados por facturación.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p23"><span><b>El cierre: enséñale el plan.</b></span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+sdf.filter(F.col(&quot;precio&quot;) &gt; 20) \
+   .groupBy(&quot;categoria&quot;) \
+   .agg(F.sum(&quot;total&quot;).alias(&quot;facturado&quot;)) \
+   .explain()</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>explain()</code> te enseña lo que Spark <b>va a hacer</b>, no lo que ha hecho. Ahí está la respuesta al checkpoint anterior: encadenar diez transformaciones no recorre los datos diez veces — Spark junta todo el encadenado en un solo plan y lo recorre una vez, reordenando por el camino lo que puede.</div><div class="cal ok"><b class="etq">Deberías ver</b>Un plan físico con sus etapas. No hace falta que lo entiendas entero: lo que importa es que exista, y que se pueda mirar.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si el <code>Window</code> te falla, comprueba que ejecutaste el paso de <code>withColumn("total", ...)</code> del nivel 2: la ventana ordena por esa columna.</div><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>De las cuatro herramientas de este bloque, ¿cuál usarías para calcular «cuánto lleva facturado cada país hasta cada fecha» sin perder el detalle de cada venta?</div><div class="cal cierre">Has traducido lo que ya sabías, has visto las cuatro ideas que cambian —perezoso, inmutable, sin índice, columnas como expresiones— y has probado los mandos propios de Spark. A partir de aquí, cuando no sepas cómo se hace algo en PySpark, la pregunta útil no es «¿cómo se llama este método?» sino «¿esto es una transformación o una acción?».</div></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Guarda el notebook: es tu chuleta de traducción para el resto del curso.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0701';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>

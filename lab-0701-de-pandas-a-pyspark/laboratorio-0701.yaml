@@ -1,0 +1,371 @@
+# Guion de la guía de laboratorio (motor 05-motores/052-demos-html).
+# Migrado de 05-motores/052-demos-html/big-data-databricks/build-laboratorio-0701.py (legacy).
+#   python -B 05-motores/052-demos-html/scripts/generar.py <este fichero>
+titulo: De pandas a PySpark
+kicker: Tema 07 · Laboratorio 1
+subtitulo: Ya sabes manipular datos con pandas. Este laboratorio traduce lo que ya haces, te enseña las
+  tres o cuatro cosas que funcionan de otra manera, y termina con los mandos que en pandas directamente
+  no existen. Los mismos datos, cargados en los dos mundos a la vez, para que compares línea a línea.
+capturas: capturas
+clave: lab0701
+cierre: 'Guarda el notebook: es tu chuleta de traducción para el resto del curso.'
+salida: laboratorio-0701.html
+meta:
+- <b>45 min</b> aproximados
+- <b>23 pasos</b> en 4 bloques
+- 'Sin ficheros ni catálogo: todo en memoria'
+contenido:
+- bloque:
+    num: '0'
+    titulo: El mismo dato, dos veces
+    minutos: 5
+    concepto: 'Todo el laboratorio se apoya en un truco: vas a tener las mismas filas en dos variables,
+      <code>pdf</code> (el DataFrame de pandas que ya conoces) y <code>sdf</code> (el de Spark). Cada
+      operación la vas a hacer en los dos, una debajo de la otra. Cuando algo se parezca, lo verás; cuando
+      cambie, también.'
+- paso: Pulsa <b>Workspace</b> en la barra lateral izquierda, luego <b>Create</b> y elige <b>Notebook</b>.
+- paso:
+    texto: Renombra el notebook a <b>0701-01-de-pandas-a-pyspark</b>, pulsando sobre su nombre arriba
+      a la izquierda.
+    ver: Arriba a la derecha, el cómputo <b>Serverless</b> conectado. No hace falta arrancar nada.
+- paso:
+    texto: <b>Celda 1.</b> Crea los datos en los dos mundos. Pega y ejecuta con <code>Mayús + Intro</code>.
+    ver: 'Dos tipos distintos: <code>pandas.core.frame.DataFrame</code> y <code>pyspark.sql.dataframe.DataFrame</code>.
+      Mismo nombre de clase, mundos distintos.'
+    info: 'Fíjate en que <code>spark.createDataFrame</code> recibe exactamente lo mismo que <code>pd.DataFrame</code>:
+      una lista de tuplas y una lista de nombres de columna. La puerta de entrada es idéntica.'
+    codigo: |-
+      import pandas as pd
+      from pyspark.sql import functions as F
+
+      datos = [
+          ("2026-01-05", "Alfombrilla", "Accesorios",     12,   7.50, "España"),
+          ("2026-01-07", "Monitor",     "Pantallas",       1, 199.99, "España"),
+          ("2026-01-09", "Teclado",     "Periféricos",     4,  25.99, "Portugal"),
+          ("2026-01-12", "Disco duro",  "Almacenamiento",  6,  79.99, "España"),
+          ("2026-01-15", "Alfombrilla", "Accesorios",     30,   7.50, "México"),
+          ("2026-01-18", "Monitor",     "Pantallas",       2, 199.99, "Portugal"),
+          ("2026-01-21", "Auriculares", "Audio",           8,  29.99, "España"),
+          ("2026-01-24", "Cable HDMI",  "Accesorios",     25,  12.95, "México"),
+          ("2026-01-27", "Teclado",     "Periféricos",     3,  25.99, "España"),
+          ("2026-01-30", "Altavoces",   "Audio",           5,  45.00, "Portugal"),
+          ("2026-02-02", "Monitor",     "Pantallas",       1, 199.99, "México"),
+          ("2026-02-05", "Memoria USB", "Almacenamiento", 40,   9.99, "España"),
+      ]
+      cols = ["fecha", "producto", "categoria", "cantidad", "precio", "pais"]
+
+      pdf = pd.DataFrame(datos, columns=cols)   # el mundo que ya conoces
+      sdf = spark.createDataFrame(datos, cols)  # el mundo nuevo
+
+      print(type(pdf))
+      print(type(sdf))
+    lenguaje: Python
+- ayuda: Si <code>spark</code> no está definido, es que el notebook no está conectado a un cómputo. Mira
+    arriba a la derecha y espera a que el Serverless se ponga en verde.
+- bloque:
+    num: '1'
+    titulo: Nivel 1 · Lo que ya sabes hacer
+    minutos: 12
+    concepto: Empezamos por la parte tranquila. Estas siete operaciones son el 80&nbsp;% de lo que haces
+      un día normal con pandas, y en PySpark son <b>la misma idea con otro nombre</b>. Si te quedas solo
+      con este bloque, ya puedes trabajar.
+- paso:
+    texto: <b>Ver las primeras filas.</b>
+    ver: 'Las mismas cinco filas dos veces. La de pandas sale con índice (0, 1, 2…); la de Spark, sin
+      él. Guarda ese detalle: vuelve en el nivel 2.'
+    info: En Databricks, <code>display(sdf)</code> te da la misma tabla pero interactiva, con filtros
+      y gráficas. <code>show()</code> es la versión de texto plano, la que funciona en cualquier Spark.
+    codigo: |-
+      # pandas
+      pdf.head(5)
+
+      # PySpark
+      sdf.show(5)
+    lenguaje: Python
+- paso:
+    texto: <b>Ver los tipos de cada columna.</b>
+    ver: Spark ha inferido <code>string</code>, <code>bigint</code> y <code>double</code>. Y marca cada
+      columna como <code>nullable = true</code> — algo que pandas ni menciona.
+    codigo: |-
+      # pandas
+      pdf.dtypes
+
+      # PySpark
+      sdf.printSchema()
+    lenguaje: Python
+- paso:
+    texto: <b>Contar filas.</b>
+    ver: 12 en los dos casos.
+    info: Parecen lo mismo, pero no lo son. <code>len(pdf)</code> lee un número que pandas ya tenía guardado.
+      <code>sdf.count()</code> lanza un trabajo de verdad que recorre los datos. Con 12 filas no lo notas;
+      con 300 millones, sí.
+    codigo: |-
+      # pandas
+      len(pdf)
+
+      # PySpark
+      sdf.count()
+    lenguaje: Python
+- paso:
+    texto: <b>Seleccionar columnas.</b>
+    aviso: En pandas van dentro de una lista y con dobles corchetes. En Spark van como argumentos sueltos
+      de <code>select()</code>. Es la confusión número uno de la primera semana.
+    codigo: |-
+      # pandas
+      pdf[["producto", "precio"]]
+
+      # PySpark
+      sdf.select("producto", "precio").show()
+    lenguaje: Python
+- paso:
+    texto: <b>Filtrar filas.</b>
+    ver: 'Cuatro filas: Alfombrilla ×12, Alfombrilla ×30, Cable HDMI ×25 y Memoria USB ×40.'
+    info: '<code>filter()</code> y <code>where()</code> son exactamente lo mismo en PySpark: dos nombres
+      para el mismo método. <code>where</code> existe para que quien venga de SQL se sienta en casa.'
+    codigo: |-
+      # pandas
+      pdf[pdf["cantidad"] > 10]
+
+      # PySpark
+      sdf.filter(sdf["cantidad"] > 10).show()
+    lenguaje: Python
+- paso:
+    texto: <b>Ordenar.</b>
+    ver: Los tres Monitor arriba, a 199,99.
+    info: Ese <code>F.desc()</code> es tu primer contacto con <code>functions</code>, el módulo que importamos
+      como <code>F</code>. Casi todo lo que en pandas es un parámetro (<code>ascending=False</code>),
+      en Spark es una función.
+    codigo: |-
+      # pandas
+      pdf.sort_values("precio", ascending=False)
+
+      # PySpark
+      sdf.orderBy(F.desc("precio")).show()
+    lenguaje: Python
+- paso:
+    texto: <b>Agrupar y agregar.</b>
+    ver: <code>Accesorios</code> con 67 unidades, el más vendido. Los mismos números en las dos versiones.
+    aviso: <code>groupby</code> en pandas, <code>groupBy</code> con B mayúscula en Spark. Vas a escribirlo
+      mal muchas veces.
+    codigo: |-
+      # pandas
+      pdf.groupby("categoria")["cantidad"].sum()
+
+      # PySpark
+      sdf.groupBy("categoria").agg(F.sum("cantidad")).show()
+    lenguaje: Python
+- checkpoint: De las siete operaciones que acabas de hacer, ¿cuál dirías que es la única que en Spark
+    hace un trabajo de verdad sobre los datos, y cuáles solo han descrito lo que quieres? La respuesta
+    está en el bloque siguiente.
+- bloque:
+    num: '2'
+    titulo: Nivel 2 · Lo que funciona distinto
+    minutos: 13
+    concepto: 'Aquí es donde se rompe el modelo mental de pandas. No son más métodos que memorizar: son
+      <b>cuatro ideas</b> que cambian cómo piensas el código. Si estas cuatro te entran, el resto de PySpark
+      se deduce solo.'
+- paso:
+    texto: <b>Idea 1 · Spark es perezoso.</b> Ejecuta esto y mira cuánto tarda.
+    ver: 'pandas imprime <code>3 filas</code>. Spark imprime un <code>DataFrame[fecha: string, ...]</code>
+      — la descripción de un plan, no unos datos.'
+    info: 'En pandas, cada línea se ejecuta cuando la escribes. En Spark, <code>filter</code> solo <b>anota</b>
+      lo que quieres. Nada se calcula hasta que pides un resultado de verdad: eso se llama una <b>acción</b>,
+      y son <code>show()</code>, <code>count()</code>, <code>collect()</code>, <code>toPandas()</code>,
+      escribir una tabla… Todo lo demás son <b>transformaciones</b>, y son gratis.'
+    codigo: |-
+      # pandas: esto calcula y devuelve datos
+      caro_pd = pdf[pdf["precio"] > 100]
+      print("pandas ya tiene", len(caro_pd), "filas")
+
+      # PySpark: esto NO calcula nada todavía
+      caro_sdf = sdf.filter(F.col("precio") > 100)
+      print("spark devuelve:", caro_sdf)
+    lenguaje: Python
+- paso:
+    texto: Ahora dispara la acción y observa la diferencia de tiempo.
+    ver: 'Ahora sí salen las tres filas de Monitor. Y esta celda ha tardado bastante más que la anterior:
+      es donde ha ocurrido el trabajo de verdad.'
+    codigo: caro_sdf.show()
+    lenguaje: Python
+- paso:
+    texto: <b>Idea 2 · No se modifica, se transforma.</b> Prueba primero la forma de pandas — y espera
+      el error.
+    aviso: Esta es la costumbre de pandas que más cuesta soltar, y la que más errores raros provoca al
+      empezar.
+    info: 'Un DataFrame de Spark es <b>inmutable</b>: no se le pueden añadir columnas por asignación,
+      y no existe <code>inplace=True</code>. Cada operación devuelve un DataFrame <b>nuevo</b>. Por eso
+      el código de PySpark se escribe encadenado.'
+    codigo: |-
+      # En pandas esto es lo normal:
+      pdf["total"] = pdf["cantidad"] * pdf["precio"]
+      pdf.head(3)
+
+      # En Spark esto NO funciona. Descoméntalo si quieres verlo fallar:
+      # sdf["total"] = sdf["cantidad"] * sdf["precio"]
+    lenguaje: Python
+- paso:
+    texto: 'La forma correcta en Spark: <code>withColumn</code>.'
+    ver: La columna <code>total</code>, con 90.0 en la primera fila (12 × 7,50).
+    info: 'Fíjate en el <code>sdf = sdf.withColumn(...)</code>: hay que <b>reasignar</b>, porque el original
+      no se toca. Si te olvidas del <code>sdf =</code>, la columna se calcula, se devuelve y se pierde.'
+    codigo: |-
+      sdf = sdf.withColumn("total", F.col("cantidad") * F.col("precio"))
+      sdf.select("producto", "cantidad", "precio", "total").show(5)
+    lenguaje: Python
+- paso:
+    texto: '<b>Idea 3 · <code>F.col()</code>: la columna como expresión.</b> Mira qué devuelve cada una.'
+    ver: pandas imprime <code>[7.5, 199.99, 25.99]</code>. Spark imprime <code>Column&lt;'precio'&gt;</code>
+      y <code>Column&lt;'(precio * 2)'&gt;</code> — descripciones, no valores.
+    info: 'En pandas, <code>pdf["precio"]</code> <b>son</b> los datos. En Spark, <code>F.col("precio")</code>
+      es una <b>receta</b>: «la columna que se llama precio». Por eso puedes multiplicarla por 2 sin que
+      exista ningún dato todavía. Entender esto es entender por qué Spark puede optimizar tu código antes
+      de ejecutarlo.'
+    codigo: |-
+      # pandas: una Serie, con los valores dentro
+      print(pdf["precio"].head(3).tolist())
+
+      # PySpark: una expresión que todavía no se ha calculado
+      print(F.col("precio"))
+      print(F.col("precio") * 2)
+    lenguaje: Python
+- paso:
+    texto: '<b>Idea 4 · <code>F.lit()</code>: envolver los valores fijos.</b> Prueba primero sin él.'
+    ver: Tres filas con <code>EUR</code> en la columna nueva.
+    aviso: Cuando veas el error <code>Column is not iterable</code> o <code>col should be Column</code>,
+      casi siempre te falta un <code>F.lit()</code>.
+    info: '<code>F.lit()</code> significa <i>literal</i>. Todo lo que <code>withColumn</code> recibe tiene
+      que ser una <b>columna</b>; un texto o un número sueltos no lo son, así que hay que envolverlos
+      para convertir «EUR» en «una columna que vale EUR en todas las filas». En pandas esto es automático:
+      <code>pdf["moneda"] = "EUR"</code> y ya está.'
+    codigo: |-
+      # Esto falla: Spark espera una columna, y le das un texto suelto
+      # sdf.withColumn("moneda", "EUR").show(3)
+
+      # Así sí: F.lit() convierte un valor fijo en una columna
+      sdf.withColumn("moneda", F.lit("EUR")).select("producto", "moneda").show(3)
+    lenguaje: Python
+- paso:
+    texto: '<b>La consecuencia incómoda: no hay índice.</b>'
+    ver: pandas responde <code>Alfombrilla</code> sin dudar. Spark te devuelve una lista con un <code>Row(...)</code>
+      — y no te promete que sea siempre el mismo.
+    info: 'Un DataFrame de Spark está repartido entre varias máquinas, así que <b>no hay una «fila 3»</b>:
+      depende de qué trozo mires y en qué orden llegaron. Si necesitas un orden, lo pides explícitamente
+      con <code>orderBy</code>; si necesitas identificar filas, usa una columna clave, no la posición.'
+    codigo: |-
+      # En pandas esto es el pan de cada día:
+      print(pdf.loc[0, "producto"])
+      print(pdf.iloc[3])
+
+      # En Spark no existe .loc, ni .iloc, ni set_index().
+      # Lo más parecido es pedir las primeras n filas:
+      print(sdf.take(1))
+    lenguaje: Python
+- ayuda: 'Si alguna celda de este bloque te da un error que no entiendes, salta a la siguiente: los errores
+    de aquí son intencionados y están comentados. Lo importante es haber visto por qué fallan, no arreglarlos.'
+- checkpoint: Has visto que <code>filter</code> no calcula nada y que <code>show</code> sí. Si encadenas
+    diez transformaciones y después llamas a <code>count()</code>, ¿cuántas veces se recorren los datos?
+- bloque:
+    num: '3'
+    titulo: Nivel 3 · Los mandos que pandas no tiene
+    minutos: 13
+    concepto: Hasta aquí has traducido. Ahora vienen cuatro herramientas que <b>no tienen equivalente
+      cómodo</b> en pandas, y que son las que hacen que merezca la pena escribir PySpark en vez de hacerlo
+      todo en SQL o en pandas.
+- paso:
+    texto: '<b><code>when / otherwise</code>: el <code>if</code> por filas.</b>'
+    ver: <code>Monitor</code> como <code>alta</code> y el resto como <code>baja</code>.
+    info: 'Aquí hay una lección escondida: en Spark <b>evita <code>.apply()</code> con funciones de Python</b>.
+      Obliga a sacar cada fila de Spark, pasarla por Python y devolverla, y eso tira abajo todo el rendimiento.
+      <code>when/otherwise</code> se ejecuta dentro del motor, sin salir.'
+    codigo: |-
+      # pandas: normalmente con np.where o con .apply()
+      pdf["gama"] = pdf["precio"].apply(lambda p: "alta" if p > 100 else "baja")
+
+      # PySpark: when / otherwise
+      sdf = sdf.withColumn(
+          "gama",
+          F.when(F.col("precio") > 100, "alta").otherwise("baja")
+      )
+      sdf.select("producto", "precio", "gama").show(5)
+    lenguaje: Python
+- paso:
+    texto: '<b><code>F.expr()</code>: escribir SQL dentro de Python.</b>'
+    ver: Las mismas dos columnas del paso anterior, calculadas con SQL escrito dentro de un <code>select</code>
+      de Python.
+    info: '<code>F.expr()</code> es la puerta de escape: le pasas un trozo de SQL como texto y Spark lo
+      entiende igual que si lo hubieras escrito con la API. Sirve para lo que en la API queda largo, y
+      para traducir consultas que ya tenías escritas en SQL.'
+    codigo: |-
+      sdf.select(
+          "producto",
+          "precio",
+          F.expr("CASE WHEN precio > 100 THEN 'alta' ELSE 'baja' END AS gama_sql"),
+          F.expr("ROUND(cantidad * precio, 2) AS total_sql")
+      ).show(5)
+    lenguaje: Python
+- paso:
+    texto: 'Su versión atajo, cuando <b>todo</b> el select es SQL: <code>selectExpr</code>.'
+    ver: Las tres columnas, con el país en mayúsculas.
+    codigo: |-
+      sdf.selectExpr(
+          "producto",
+          "cantidad * precio AS total",
+          "upper(pais) AS pais_mayus"
+      ).show(5)
+    lenguaje: Python
+- paso:
+    texto: '<b>Window functions: agregar sin perder las filas.</b> Esto en pandas existe, pero es notablemente
+      más incómodo.'
+    ver: Dentro de cada categoría, los productos numerados 1, 2, 3… por importe. Ninguna fila ha desaparecido.
+    info: Un <code>groupBy</code> te devuelve <b>una fila por grupo</b> y pierdes el detalle. Una <b>ventana</b>
+      calcula lo mismo pero <b>deja todas las filas en su sitio</b>, añadiendo el resultado como una columna
+      más. Es la herramienta para rankings, acumulados y comparaciones contra el propio grupo.
+    codigo: |-
+      from pyspark.sql import Window
+
+      ventana = Window.partitionBy("categoria").orderBy(F.desc("total"))
+
+      sdf.withColumn("puesto", F.row_number().over(ventana)) \
+         .select("categoria", "producto", "total", "puesto") \
+         .orderBy("categoria", "puesto") \
+         .show()
+    lenguaje: Python
+- paso:
+    texto: <b>El mismo objeto, en SQL.</b> Registra el DataFrame como vista y consúltalo.
+    ver: Tres países ordenados por facturación.
+    info: 'No hay conversión ni copia: es <b>el mismo DataFrame</b>, consultado con otro lenguaje. Puedes
+      empezar en Python, pasar a SQL para la parte que te salga mejor en SQL, y volver. En pandas esto
+      no existe sin montar una base de datos aparte.'
+    codigo: |-
+      sdf.createOrReplaceTempView("ventas")
+
+      spark.sql("""
+          SELECT pais,
+                 ROUND(SUM(total), 2) AS facturado
+          FROM ventas
+          GROUP BY pais
+          ORDER BY facturado DESC
+      """).show()
+    lenguaje: Python
+- paso:
+    texto: '<b>El cierre: enséñale el plan.</b>'
+    ver: 'Un plan físico con sus etapas. No hace falta que lo entiendas entero: lo que importa es que
+      exista, y que se pueda mirar.'
+    info: '<code>explain()</code> te enseña lo que Spark <b>va a hacer</b>, no lo que ha hecho. Ahí está
+      la respuesta al checkpoint anterior: encadenar diez transformaciones no recorre los datos diez veces
+      — Spark junta todo el encadenado en un solo plan y lo recorre una vez, reordenando por el camino
+      lo que puede.'
+    codigo: |-
+      sdf.filter(F.col("precio") > 20) \
+         .groupBy("categoria") \
+         .agg(F.sum("total").alias("facturado")) \
+         .explain()
+    lenguaje: Python
+- ayuda: 'Si el <code>Window</code> te falla, comprueba que ejecutaste el paso de <code>withColumn("total",
+    ...)</code> del nivel 2: la ventana ordena por esa columna.'
+- checkpoint: De las cuatro herramientas de este bloque, ¿cuál usarías para calcular «cuánto lleva facturado
+    cada país hasta cada fecha» sin perder el detalle de cada venta?
+- cierre: Has traducido lo que ya sabías, has visto las cuatro ideas que cambian —perezoso, inmutable,
+    sin índice, columnas como expresiones— y has probado los mandos propios de Spark. A partir de aquí,
+    cuando no sepas cómo se hace algo en PySpark, la pregunta útil no es «¿cómo se llama este método?»
+    sino «¿esto es una transformación o una acción?».

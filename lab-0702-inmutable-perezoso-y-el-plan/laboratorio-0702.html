@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 07 · Laboratorio 2 · Inmutable, perezoso y el plan</title>
+<style>
+:root{--ink:#16202e;--muted:#5b6472;--line:#e2e7ed;--bg:#fff;--soft:#f6f8fa;
+ --acc:#1f4e79;--acc-soft:#eaf1f8;--ok:#0f7b52;--ok-bg:#e9f6ef;--warn:#9a5b00;
+ --warn-bg:#fdf4e6;--help:#6b4ea8;--help-bg:#f2eefb;--radius:10px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font:16px/1.65 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+code{font-family:Consolas,"SF Mono",Menlo,monospace;font-size:.88em;
+ background:var(--soft);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+a{color:var(--acc)}
+#top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+ backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+#bar{height:3px;background:var(--acc);width:0;transition:width .25s}
+#topin{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;
+ justify-content:space-between;align-items:center;gap:16px;font-size:13px}
+#topin b{color:var(--acc)}
+#reset{border:1px solid var(--line);background:#fff;color:var(--muted);
+ border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+#reset:hover{border-color:var(--acc);color:var(--acc)}
+.wrap{max-width:880px;margin:0 auto;padding:0 24px 80px}
+header.hero{padding:48px 0 8px;border-bottom:1px solid var(--line);margin-bottom:32px}
+.kicker{color:var(--acc);font-weight:600;font-size:13px;letter-spacing:.09em;
+ text-transform:uppercase;margin:0 0 6px}
+h1{font-size:34px;line-height:1.2;margin:0 0 12px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px;max-width:62ch}
+.meta{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:13.5px;
+ padding-bottom:26px}
+.meta b{color:var(--ink)}
+nav.idx{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);
+ padding:8px;margin-bottom:44px;display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px}
+nav.idx a{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;
+ color:var(--ink);text-decoration:none;font-size:14.5px}
+nav.idx a:hover{background:#fff}
+nav.idx span{width:22px;height:22px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:12px;font-weight:600;flex:none}
+.bloque{margin-bottom:56px;scroll-margin-top:70px}
+.bloque h2{display:flex;align-items:center;gap:12px;font-size:23px;font-weight:640;
+ margin:0 0 16px;padding-bottom:14px;border-bottom:2px solid var(--line)}
+.bloque h2 .num{width:30px;height:30px;border-radius:50%;background:var(--acc);color:#fff;
+ display:grid;place-items:center;font-size:15px;flex:none}
+.bloque h2 .min{margin-left:auto;font-size:12.5px;font-weight:500;color:var(--muted);
+ background:var(--soft);border:1px solid var(--line);border-radius:20px;padding:3px 11px}
+p.intro{color:var(--muted);margin:0 0 20px}
+ol.pasos{list-style:none;counter-reset:p;margin:0;padding:0}
+.paso{counter-increment:p;position:relative;padding:0 0 26px 44px;margin-bottom:4px}
+.paso::before{content:counter(p);position:absolute;left:0;top:1px;width:27px;height:27px;
+ border-radius:50%;border:1.5px solid var(--line);color:var(--muted);background:#fff;
+ display:grid;place-items:center;font-size:13px;font-weight:600}
+.paso:not(:last-child)::after{content:"";position:absolute;left:13px;top:32px;bottom:0;
+ width:1.5px;background:var(--line)}
+.paso.done::before{background:var(--ok);border-color:var(--ok);color:#fff;content:"\2713"}
+.acc{display:flex;gap:10px;align-items:flex-start;cursor:pointer;margin-bottom:12px}
+.acc input{margin-top:5px;width:16px;height:16px;accent-color:var(--ok);flex:none;cursor:pointer}
+.paso.done .acc>span{color:var(--muted)}
+h3.sec{font-size:18px;font-weight:620;margin:34px 0 12px;scroll-margin-top:70px}
+h3.sec label{display:flex;gap:10px;align-items:baseline;cursor:pointer}
+h3.sec input{width:15px;height:15px;accent-color:var(--ok);cursor:pointer;flex:none}
+h3.sec.done>label>span{color:var(--muted);text-decoration:line-through;
+ text-decoration-color:var(--line)}
+h4{font-size:15.5px;font-weight:620;color:var(--acc);margin:22px 0 8px}
+h5{font-size:14.5px;font-weight:620;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 14px} ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+figure{margin:12px 0 0}
+.ph{margin:12px 0 0;padding:14px 16px;border:2px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13.5px}
+.ph code{font-weight:600}
+figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block;cursor:zoom-in}
+.cal{border-left:3px solid;border-radius:0 8px 8px 0;padding:11px 15px;margin:12px 0 0;
+ font-size:14.5px}
+.cal b.etq{display:block;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+ margin-bottom:3px}
+.ok{border-color:var(--ok);background:var(--ok-bg)} .ok b.etq{color:var(--ok)}
+.warn{border-color:var(--warn);background:var(--warn-bg)} .warn b.etq{color:var(--warn)}
+.info{border-color:var(--acc);background:var(--acc-soft);margin-bottom:22px} .info b.etq{color:var(--acc)}
+.info2{border-color:var(--acc);background:var(--acc-soft)} .info2 b.etq{color:var(--acc)}
+.help{border-color:var(--help);background:var(--help-bg);margin-top:22px} .help b.etq{color:var(--help)}
+.chk{border-color:var(--acc);background:var(--acc-soft);margin-top:22px} .chk b.etq{color:var(--acc)}
+.cierre{border-color:var(--ok);background:var(--ok-bg);margin-top:22px;padding:15px}
+.accion{border-color:var(--acc);background:var(--acc-soft);margin:14px 0}
+.tabla{overflow-x:auto;margin:0 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:620}
+tbody tr:nth-child(even){background:#fbfcfd}
+.urlbox{display:flex;gap:8px;align-items:center;background:#0f172a;border-radius:8px;
+ padding:9px 9px 9px 14px;margin:2px 0 0;overflow:hidden}
+.urlbox code{background:none;border:0;color:#cbd5e1;font-size:12.5px;
+ white-space:nowrap;overflow-x:auto;flex:1;padding:0}
+.codebox{background:#0f172a;border-radius:8px;overflow:hidden;margin:12px 0}
+.codebar{display:flex;justify-content:space-between;align-items:center;
+ padding:7px 9px 7px 14px;border-bottom:1px solid #1e293b}
+.codebar span{color:#7c8ba1;font-size:11.5px;letter-spacing:.07em;text-transform:uppercase}
+.codebox pre{margin:0;padding:13px 16px;overflow-x:auto}
+.codebox code{background:none;border:0;padding:0;color:#e2e8f0;font-size:13px;line-height:1.6}
+.copy{border:0;background:#1e293b;color:#cbd5e1;border-radius:6px;padding:6px 13px;
+ font-size:12.5px;cursor:pointer;flex:none}
+.copy:hover{background:#334155;color:#fff}
+.copy.ko{background:var(--ok);color:#fff}
+.fin{border:1.5px dashed var(--line);border-radius:var(--radius);padding:26px;
+ text-align:center;color:var(--muted);font-size:14.5px}
+.fin b{display:block;color:var(--ink);font-size:16px;margin-bottom:5px}
+.json{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:14px 16px;margin:12px 0;
+ font:12.5px/1.6 Consolas,"SF Mono",Menlo,monospace;overflow-x:auto;white-space:pre}
+.json .k{color:#93c5fd} .json .s{color:#86efac} .json .n{color:#fcd34d} .json .c{color:#7c8ba1}
+.tag{display:inline-block;margin-left:10px;padding:0 8px;border-radius:10px;
+ font:600 11px/18px "Segoe UI",system-ui,sans-serif;vertical-align:1px}
+.tag.st{background:#1d4ed8;color:#fff} .tag.ar{background:#7e22ce;color:#fff}
+.tag.es{background:#475569;color:#fff} .tag.b64{background:#b45309;color:#fff}
+.tag.ok{background:var(--ok);color:#fff}
+.flujo{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:14px 0 18px}
+.flujo .caja{flex:1 1 150px;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;
+ font-size:13.5px;background:#fff}
+.flujo .caja b{display:block;color:var(--acc);margin-bottom:3px}
+.flujo .caja.on{border-color:var(--acc);background:var(--acc-soft)}
+.flujo .flecha{align-self:center;color:var(--muted);font-size:18px}
+#lb{position:fixed;inset:0;background:rgba(10,16,24,.93);display:none;
+ place-items:center;z-index:99;cursor:zoom-out;padding:24px}
+#lb.on{display:grid} #lb img{max-width:100%;max-height:100%;border-radius:6px}
+@media print{#top,nav.idx,#reset,.copy{display:none}.paso::after{display:none}
+ body{font-size:11pt}.codebox,.urlbox{background:#f6f8fa;border:1px solid var(--line)}
+ .codebox code,.urlbox code{color:#16202e}}
+</style>
+</head>
+<body>
+<div id="top"><div id="bar"></div><div id="topin">
+  <span><b id="hechos">0</b> de 21 apartados completados</span>
+  <button id="reset">Empezar de cero</button>
+</div></div>
+<div class="wrap">
+<header class="hero">
+  <p class="kicker">Tema 07 · Laboratorio 2</p>
+  <h1>Inmutable, perezoso y el plan</h1>
+  <p class="sub">Escribes tu primer programa en Spark, un contador de palabras de <i>Orgullo y prejuicio</i>, a trozos. Por el camino compruebas tres cosas que explican cómo piensa Spark: que nada se modifica, que nada se ejecuta hasta que pides un resultado y que, gracias a eso, Spark reescribe tu código antes de ejecutarlo.</p>
+  <div class="meta"><span><b>7 bloques</b> · unos 60 minutos</span><span>Catálogo <code>lab0702</code> · cómputo <b>Serverless</b></span><span>Todo el código se copia con un clic</span></div>
+</header>
+<nav class="idx"><a href="#b1"><span>0</span>Preparar el entorno</a><a href="#b2"><span>1</span>Inmutabilidad</a><a href="#b3"><span>2</span>Práctica 1 · Leer el texto (Read)</a><a href="#b4"><span>3</span>Práctica 2 · Nada se ejecuta (Token · Clean)</a><a href="#b5"><span>4</span>Cómo reescribe Spark tu plan</a><a href="#b6"><span>5</span>Receta perezosa · leer, transformar, escribir</a><a href="#b7"><span>6</span>Práctica 3 · count() lanza el job (Count)</a><a href="#b8"><span>Extra</span>Si sobra tiempo · 8 particiones</a></nav>
+<section class="bloque" id="b1"><h2><span class="num">0</span>Preparar el entorno<span class="min">8 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Los notebooks del laboratorio vienen en el repositorio del curso, en la carpeta <b>lab-0702-inmutable-perezoso-y-el-plan</b>. Un notebook de preparación crea el catálogo <code>lab0702</code> con un volumen donde el bloque 5 escribe unos CSV pequeños. No usamos el catálogo <code>workspace</code>: no existe en todos los workspaces.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p1"><span>Pulsa <b>Workspace</b> en la barra lateral, abre <b>Users</b> y entra en tu carpeta (la que lleva tu email). Si ya tienes la carpeta <b>BAC-big-data</b> de otro laboratorio, ábrela, pulsa el botón con el nombre de la rama (<b>main</b>) y luego <b>Pull</b>; después salta al paso 4.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p2"><span>Pulsa <b>Create</b> arriba a la derecha y elige <b>Git folder</b>.</span></label></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p3"><span>En <b>Git repository URL</b> pega la dirección del repositorio y pulsa <b>Create Git folder</b>.</span></label><div class="urlbox"><code>https://github.com/jmartinezceste/BAC-big-data</code><button class="copy">Copiar</button></div><div class="cal ok"><b class="etq">Deberías ver</b>Una carpeta nueva, <b>BAC-big-data</b>, y dentro la carpeta <b>lab-0702-inmutable-perezoso-y-el-plan</b> con los notebooks <code>00_preparar_entorno</code> y <code>01_inmutable_perezoso_y_el_plan</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p4"><span>Abre el notebook <b>00_preparar_entorno</b>. Comprueba que arriba a la derecha está conectado a <b>Serverless</b> y pulsa <b>Run all</b>.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Al final, el mensaje <i>Entorno listo: /Volumes/lab0702/ejercicios/ficheros existe y está vacío.</i></div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p5"><span>Abre el notebook <b>01_inmutable_perezoso_y_el_plan</b>. A partir de aquí, ejecuta las celdas una a una con <code>Mayús + Intro</code>, en el orden de esta guía.</span></label><div class="cal ok"><b class="etq">Deberías ver</b>Arriba a la derecha, el cómputo <b>Serverless</b> conectado.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si <b>Run all</b> falla al crear el catálogo con un error de permisos, tu workspace no te deja crear catálogos: avisa al docente. Los bloques 1 a 4 y 6 no necesitan el catálogo; si sigue sin funcionar, empieza por el bloque 1 y salta el 5.</div></ol></section><section class="bloque" id="b2"><h2><span class="num">1</span>Inmutabilidad<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Ninguna operación modifica el DataFrame original. <b>Reasignar la variable no es modificar el objeto</b>: como en Python, <code>x = 5; x = x + 1</code> no cambia el 5, crea un 6.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p6"><span><b>Un select.</b> Guarda una segunda etiqueta para el DataFrame, haz un <code>select</code> de dos columnas y compara.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+df = spark.range(0, 20, 1, numPartitions=4).selectExpr(
+    &quot;id AS col1&quot;, &quot;id * 2 AS col2&quot;, &quot;id * 3 AS col3&quot;)
+
+df_original = df
+df = df.select(&quot;col1&quot;, &quot;col2&quot;)          # objeto NUEVO: el original no se toca
+
+print(&quot;Columnas de df_original:&quot;, df_original.columns)   # sigue con las 3
+print(&quot;Columnas de df:         &quot;, df.columns)            # solo 2
+print(&quot;¿Es el mismo objeto?    &quot;, df is df_original)     # False</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>El <code>select</code> no ha recortado nada ni ha copiado datos: ha creado un DataFrame nuevo, que es un paso más en un plan. Por eso encadenar transformaciones no cuesta memoria.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>df_original</code> sigue con <b>3 columnas</b>, <code>df</code> tiene 2 y <code>¿Es el mismo objeto? False</code>.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p7"><span><b>Un filter.</b> Lo mismo con filas.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# Lo mismo con un filter: el original no pierde filas.
+# count() es una acción (lanza trabajo): aquí solo la usamos para comprobarlo; la explicamos en el bloque 5.
+base = spark.range(0, 10)
+filtrado = base.filter(&quot;id &gt;= 5&quot;)
+
+print(&quot;Filas en base:    &quot;, base.count())      # sigue teniendo 10
+print(&quot;Filas en filtrado:&quot;, filtrado.count())  # 5</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>count()</code> es una <b>acción</b>: lanza trabajo de verdad. Aquí solo la usamos para comprobarlo; en el bloque 6 vemos qué pasa cuando la llamas.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>Filas en base: 10</code> y <code>Filas en filtrado: 5</code>.</div></li></ol></section><section class="bloque" id="b3"><h2><span class="num">2</span>Práctica 1 · Leer el texto (Read)<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>El hilo del día es contar las palabras de <i>Orgullo y prejuicio</i> en cuatro pasos: <b>Read · Token · Clean · Count</b>. Hoy el texto va en una lista dentro del notebook, así que no hace falta ningún fichero.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p8"><span>Crea el DataFrame <code>book</code> y mira su esquema.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+texto = [
+    &quot;The Project Gutenberg EBook of Pride and Prejudice, by Jane Austen&quot;,
+    &quot;&quot;,
+    &quot;This eBook is for the use of anyone anywhere at no cost and with&quot;,
+    &quot;almost no restrictions whatsoever.  You may copy it, give it away or&quot;,
+    &quot;re-use it under the terms of the Project Gutenberg License included&quot;,
+    &quot;with this eBook or online at www.gutenberg.org&quot;,
+    &quot;&quot;,
+    &quot;Title: Pride and Prejudice&quot;,
+    &quot;&quot;,
+    &quot;It is a truth universally acknowledged, that a single man in&quot;,
+    &quot;possession of a good fortune, must be in want of a wife.&quot;,
+    &quot;&quot;,
+    &quot;However little known the feelings or views of such a man may be&quot;,
+    &quot;on his first entering a neighbourhood, this truth is so well&quot;,
+    &quot;fixed in the minds of the surrounding families, that he is&quot;,
+    &quot;considered the rightful property of some one or other of their&quot;,
+    &quot;daughters.&quot;,
+]
+
+# Hoy el texto está en el notebook, es decir, en el driver: es pequeño.
+# Con un fichero real, spark.read.text(ruta) lo leen los executors directamente del almacenamiento.
+book = spark.createDataFrame([(línea,) for línea in texto], [&quot;value&quot;])
+book.printSchema()
+# root
+#  |-- value: string (nullable = true)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>printSchema()</code> responde sin procesar el texto: Spark ya sabe la forma del resultado. El <b>análisis</b> no espera; la <b>ejecución</b>, sí. Ojo: aquí los datos salen del driver porque los has escrito en el notebook. Con un fichero real, <code>spark.read.text</code> lo leerían los executors directamente del almacenamiento.</div><div class="cal ok"><b class="etq">Deberías ver</b>Al instante: <code>root</code> y <code>|-- value: string (nullable = true)</code>.</div></li></ol></section><section class="bloque" id="b4"><h2><span class="num">3</span>Práctica 2 · Nada se ejecuta (Token · Clean)<span class="min">7 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Cinco transformaciones narrow que trocean y limpian el texto. Cada una devuelve un DataFrame nuevo y solo añade un paso al plan.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p9"><span><b>Token y Clean.</b> Separa las líneas en palabras, pásalas a minúsculas, quédate con las letras y quita las vacías.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql.functions import col, split, explode, lower, regexp_extract
+
+lines = book.select(split(col(&quot;value&quot;), &quot; &quot;).alias(&quot;line&quot;))          # Token
+words = lines.select(explode(col(&quot;line&quot;)).alias(&quot;word&quot;))
+words_lower = words.select(lower(col(&quot;word&quot;)).alias(&quot;word_lower&quot;))   # Clean
+words_clean = words_lower.select(
+    regexp_extract(col(&quot;word_lower&quot;), &quot;[a-z]+&quot;, 0).alias(&quot;word&quot;)
+)
+words_nonull = words_clean.filter(col(&quot;word&quot;) != &quot;&quot;)</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>La celda termina al instante y <b>no imprime nada</b>: no se ha leído ni una línea.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p10"><span><b>El plan.</b> Pide a Spark que te enseñe lo que piensa hacer.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# El plan crece; el libro aún no se ha leído. explain() no es una acción.
+words_nonull.explain(mode=&quot;formatted&quot;)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>explain()</code> no es una acción: enseña el plan sin ejecutarlo. En Databricks los nombres pueden empezar por <code>Photon</code> (<code>PhotonProject</code>…): es el motor vectorizado, la idea es la misma.</div><div class="cal ok"><b class="etq">Deberías ver</b>Un bloque <code>== Physical Plan ==</code> con una lista numerada de operadores: la lectura de los datos locales (<code>LocalTableScan</code>), un <code>Generate</code> (el <code>explode</code>), los <code>Project</code> y el <code>Filter</code>.</div></li></ol></section><section class="bloque" id="b5"><h2><span class="num">4</span>Cómo reescribe Spark tu plan<span class="min">15 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Como nada se ejecuta hasta la acción, Spark tiene tu cadena <b>entera</b> delante y puede mejorarla antes de mover un byte. Lo vas a ver escribiendo a propósito un plan <b>malo</b> y leyendo los cuatro planes por los que pasa.</div><div class="flujo"><div class="caja"><b>Parsed</b>Tu código, tal cual. No comprueba nada</div><div class="flecha">→</div><div class="caja"><b>Analyzed</b>Columnas y tipos comprobados</div><div class="flecha">→</div><div class="caja on"><b>Optimized</b>Catalyst funde, reordena y elimina</div><div class="flecha">→</div><div class="caja"><b>Physical</b>Cómo se ejecuta: operadores reales</div></div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p11"><span><b>Un plan saturado.</b> Una tabla de 1000 filas con un número aleatorio <code>v</code> y una columna derivada <code>w = v × 2</code>. Encima, cuatro filtros sobre <code>v</code> que se pisan entre sí, uno sobre <code>id</code>, una columna <code>z</code>, un <code>select</code> que deja fuera <code>w</code> y un último filtro sobre <code>z</code>.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql import functions as F
+
+df = (spark.range(1000)                              # id: 0..999
+      .withColumn(&quot;v&quot;, F.rand(seed=42))              # aleatorio entre 0 y 1
+      .withColumn(&quot;w&quot;, F.col(&quot;v&quot;) * 2))              # derivada
+
+# Cadena de solo transformaciones narrow, con filtros redundantes
+df_plan = (df
+    .filter(F.col(&quot;v&quot;) &gt; 0.10)
+    .filter(F.col(&quot;v&quot;) &gt; 0.15)
+    .filter(F.col(&quot;v&quot;) &gt; 0.20)
+    .filter(F.col(&quot;v&quot;) &lt; 0.95)
+    .filter((F.col(&quot;id&quot;) % 2) == 0)
+    .withColumn(&quot;z&quot;, F.col(&quot;w&quot;) + 1)
+    .select(&quot;id&quot;, &quot;z&quot;)                               # proyección: w y v ya no se piden
+    .filter(F.col(&quot;z&quot;) &gt; 1.2))</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>La celda termina al instante: solo has descrito la receta.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p12"><span><b>Los cuatro planes.</b> Ejecuta <code>explain(mode="extended")</code> y recorre la salida de arriba abajo.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# Los cuatro planes, de arriba abajo
+df_plan.explain(mode=&quot;extended&quot;)</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Cuatro secciones, en este orden: <code>== Parsed Logical Plan ==</code>, <code>== Analyzed Logical Plan ==</code>, <code>== Optimized Logical Plan ==</code> y <code>== Physical Plan ==</code>.</div></li><div class="tabla"><table><thead><tr><th>Plan</th><th>Qué buscar</th><th>Qué significa</th></tr></thead><tbody><tr><td>Parsed</td><td>Los seis Filter apilados, uno por cada .filter(), y columnas con comilla (&#x27;v, &#x27;id) y unresolvedstar</td><td>Spark ha traducido tu código sin comprobar nada: todavía no sabe si v existe</td></tr><tr><td>Analyzed</td><td>El mismo árbol, igual de largo, pero cada columna con su número (v#11066) y su tipo (id: bigint, z: double)</td><td>Columnas y tipos validados. Si una columna no existiera, fallaría aquí, antes de leer una fila</td></tr><tr><td>Optimized</td><td>Un solo Filter: (v &gt; 0.2) AND (v &lt; 0.95) AND (id % 2 = 0) AND (v * 2.0 + 1.0 &gt; 1.2)</td><td>Catalyst ha fundido los filtros, ha borrado v &gt; 0.10 y v &gt; 0.15 (los cubre v &gt; 0.2), ha sustituido w y z por su fórmula y ha quitado la columna w</td></tr><tr><td>Physical</td><td>Range, Project y Filter (en Databricks, PhotonRange, PhotonProject, PhotonFilter) en un solo stage</td><td>Lo que se ejecuta de verdad: una pasada, sin pasos intermedios</td></tr></tbody></table></div><div class="cal ok"><b class="etq">Catalyst no es magia</b>Fíjate en el último filtro del plan optimizado, <code>v × 2 + 1 &gt; 1,2</code>. Equivale a <code>v &gt; 0,1</code>, y eso ya lo garantiza <code>v &gt; 0,2</code>: el filtro sobra. Aun así, Catalyst no lo quita, porque no hace álgebra. Funde y elimina lo que reconoce por reglas; no razona como tú.</div><li class="paso"><label class="acc"><input type="checkbox" data-id="p13"><span><b>La misma consulta, limpia.</b> Un solo filtro y la columna <code>z</code> calculada directamente. Compara su plan físico con el de <code>df_plan</code>.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# La misma consulta, escrita limpia: un solo filtro y sin la columna w
+limpio = (df
+    .filter((F.col(&quot;v&quot;) &gt; 0.20) &amp; (F.col(&quot;v&quot;) &lt; 0.95) &amp; ((F.col(&quot;id&quot;) % 2) == 0))
+    .select(&quot;id&quot;, (F.col(&quot;v&quot;) * 2 + 1).alias(&quot;z&quot;))
+    .filter(F.col(&quot;z&quot;) &gt; 1.2))
+
+limpio.explain()      # solo el plan físico: compáralo con el de df_plan</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Moraleja práctica: escribe el código para que se <b>lea</b> bien. Separar filtros o crear columnas intermedias no hace más lento tu programa, porque Catalyst lo reescribe. Lo que sí cuesta es lo que no puede quitar, como pedir columnas que no necesitas al final.</div><div class="cal ok"><b class="etq">Deberías ver</b>Un plan físico con los mismos operadores y las mismas condiciones que el de <code>df_plan</code>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>¿Por qué Spark puede quitar la columna <code>w</code> y fundir los filtros, y pandas no podría? Pista: piensa en qué tiene delante cada uno en el momento de ejecutar la primera línea.</div></ol></section><section class="bloque" id="b6"><h2><span class="num">5</span>Receta perezosa · leer, transformar, escribir<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Una receta corta con un CSV pequeño en el volumen <code>lab0702.ejercicios.ficheros</code>. Montas los pasos y <b>no pasa nada</b> hasta el <code>write</code>: esa es la acción que lanza el trabajo.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p14"><span><b>La ruta de esta ejecución.</b> Comprueba que el volumen existe y prepara una carpeta nueva.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from uuid import uuid4
+
+RUTA_VOLUMEN = &quot;/Volumes/lab0702/ejercicios/ficheros&quot;
+try:
+    dbutils.fs.ls(RUTA_VOLUMEN)
+except Exception as e:
+    raise FileNotFoundError(f&quot;No existe {RUTA_VOLUMEN}: ejecuta antes 00_preparar_entorno.&quot;) from e
+
+ROOT = f&quot;{RUTA_VOLUMEN}/{uuid4().hex}&quot;
+entrada, salida = ROOT + &quot;/entrada&quot;, ROOT + &quot;/resultado&quot;
+print(&quot;Directorio de esta ejecución:&quot;, ROOT)</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>Directorio de esta ejecución: /Volumes/lab0702/ejercicios/ficheros/…</code> con un identificador largo al final.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p15"><span><b>La receta.</b> Escribe un CSV de ejemplo y monta la lectura, el cálculo y la agrupación.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql import functions as F
+
+# Preparación: un CSV de ejemplo en el volumen (esto sí escribe: write es una acción)
+spark.range(0, 120, 1, numPartitions=4).selectExpr(
+    &quot;id % 3 AS categoria&quot;, &quot;id AS importe&quot;
+).write.csv(entrada, header=True)
+
+# Receta: leer → transformar → agrupar. Todavía no se calcula nada.
+df = spark.read.schema(&quot;categoria LONG, importe LONG&quot;).option(&quot;header&quot;, True).csv(entrada)
+preparado = df.withColumn(&quot;doble&quot;, F.col(&quot;importe&quot;) * 2).where(F.col(&quot;doble&quot;) &gt;= 120)
+resultado = preparado.groupBy(&quot;categoria&quot;).count()
+resultado.explain(mode=&quot;formatted&quot;)</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>La primera línea sí escribe: <code>write</code> es una acción y prepara los datos de entrada. Lo demás solo describe.</div><div class="cal ok"><b class="etq">Deberías ver</b>El plan de <code>resultado</code>, con un <code>HashAggregate</code> y un <code>Exchange</code> (el shuffle del <code>groupBy</code>). Aún no hay resultado.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p16"><span><b>La acción.</b> El <code>write</code> lanza el trabajo. Después lees el resultado para comprobarlo.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# Acción: el write lanza el trabajo
+resultado.write.csv(salida, header=True)
+
+leido = spark.read.schema(&quot;categoria LONG, count LONG&quot;).option(&quot;header&quot;, True).csv(salida)
+print({r.categoria: r[&quot;count&quot;] for r in leido.collect()})
+# Esperado: {0: 20, 1: 20, 2: 20}
+
+display(dbutils.fs.ls(salida))</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Cada partición escribe su propio fichero. Por eso un resultado de 3 filas puede quedar repartido en varios ficheros.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>{0: 20, 1: 20, 2: 20}</code> y la lista de ficheros de la carpeta <code>resultado</code>, con varios <code>part-….csv</code> y un <code>_SUCCESS</code>.</div></li><div class="cal help"><b class="etq">Si algo falla</b>Si falla con <i>No existe /Volumes/lab0702/…</i>, no has ejecutado <code>00_preparar_entorno</code>: vuelve al bloque 0. Si sigue sin funcionar, salta al bloque 6: no necesita el volumen.</div></ol></section><section class="bloque" id="b7"><h2><span class="num">6</span>Práctica 3 · count() lanza el job (Count)<span class="min">10 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>Volvemos al contador de palabras. Hasta ahora Spark solo tomaba notas. Una acción pide un resultado y <b>nace un job</b>.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p17"><span><b>La acción.</b> Cuenta las palabras.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+words_nonull.count()                              # acción: nace un job</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Ábrelo: <b>See performance → Query Profile</b> enseña qué operadores se han ejecutado. En serverless no hay Spark UI.</div><div class="cal ok"><b class="etq">Deberías ver</b>Un número, y debajo de la celda el enlace <b>See performance</b>: ese es el job que acaba de nacer.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p18"><span><b>Contar por palabra.</b> Agrupa y cuenta.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+counts = words_nonull.groupBy(&quot;word&quot;).count()     # transformación wide: aún nada
+print(counts)  # DataFrame[word: string, count: bigint]</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b><code>groupBy("word").count()</code> no es una acción: devuelve un DataFrame. El <code>count</code> de dentro es un paso más del plan, y es <b>wide</b>: hará falta un shuffle.</div><div class="cal ok"><b class="etq">Deberías ver</b><code>DataFrame[word: string, count: bigint]</code> y ningún enlace <b>See performance</b>: no se ha ejecutado nada.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p19"><span><b>El top 10.</b> Ordena y muestra.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+# Otro job, el top 10 (con shuffle: el groupBy es wide)
+counts.orderBy(col(&quot;count&quot;).desc()).show(10)</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b>Las 10 palabras más frecuentes del fragmento, con <code>the</code>, <code>of</code> o <code>a</code> arriba.</div></li><li class="paso"><label class="acc"><input type="checkbox" data-id="p20"><span><b>Dos count distintos.</b> Contar filas no es contar grupos, y <code>count(columna)</code> ignora los nulos.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql import functions as F
+
+df = spark.range(0, 120, 1, numPartitions=4).selectExpr(
+    &quot;id % 3 AS categoria&quot;,
+    &quot;CASE WHEN id % 2 = 0 THEN id END AS valor&quot;,
+)
+
+resultado = df.groupBy(&quot;categoria&quot;).count()
+print(&quot;Columnas (aún no se ha ejecutado):&quot;, resultado.columns)
+
+n_grupos = resultado.count()   # acción: cuenta grupos, no filas
+n_filas = df.count()           # acción: cuenta filas
+
+print(&quot;Grupos:&quot;, n_grupos)     # 3
+print(&quot;Filas: &quot;, n_filas)      # 120
+print(&quot;Filas por grupo:&quot;, {r.categoria: r[&quot;count&quot;] for r in resultado.collect()})
+print(&quot;Valores no nulos:&quot;, df.select(F.count(&quot;valor&quot;)).first()[0])  # 60</code></pre></div><div class="cal ok"><b class="etq">Deberías ver</b><code>Grupos: 3</code>, <code>Filas: 120</code>, <code>Filas por grupo</code> con 40 en cada categoría y <code>Valores no nulos: 60</code>.</div></li><div class="cal chk"><b class="etq">Comprueba que lo has entendido</b>Cuenta cuántas acciones has lanzado en este bloque. ¿Cuántos enlaces <b>See performance</b> deberías tener?</div></ol></section><section class="bloque" id="b8"><h2><span class="num">Extra</span>Si sobra tiempo · 8 particiones<span class="min">5 min</span></h2><div class="cal info"><b class="etq">Qué estás mirando</b>En serverless no eliges los núcleos, pero sí cuántas particiones tiene un DataFrame. Con <code>spark_partition_id</code> ves cuántas filas caen en cada una.</div><ol class="pasos"><li class="paso"><label class="acc"><input type="checkbox" data-id="p21"><span>Crea un DataFrame con 8 particiones y mira el reparto.</span></label><div class="codebox"><div class="codebar"><span>Python</span><button class="copy">Copiar</button></div><pre><code>%python
+from pyspark.sql.functions import spark_partition_id, sum as spark_sum
+
+df8 = spark.range(0, 8000, 1, numPartitions=8)
+df8.explain(mode=&quot;formatted&quot;)
+
+reparto = (df8
+           .select(spark_partition_id().alias(&quot;particion&quot;))
+           .groupBy(&quot;particion&quot;)
+           .count()
+           .orderBy(&quot;particion&quot;))
+reparto.show()
+
+print(&quot;Suma de id:&quot;, df8.agg(spark_sum(&quot;id&quot;)).first()[0])</code></pre></div><div class="cal info2"><b class="etq">Por qué esto</b>Con 4 núcleos, 8 particiones irían en dos oleadas de 4. En serverless no afirmamos los núcleos: después de la acción, míralo en el Query Profile.</div><div class="cal ok"><b class="etq">Deberías ver</b>Una tabla con las particiones 0 a 7, con <b>1000 filas</b> cada una, y <code>Suma de id: 31996000</code>.</div></li></ol></section>
+<div class="fin"><b>Fin del laboratorio</b>Guarda el notebook: el 23.11 volvemos a él para ver por dentro los jobs que ha creado, con el DAG y el Query Profile.</div>
+</div>
+<div id="lb"><img alt=""></div>
+<script>
+const KEY='lab0702';
+const est=JSON.parse(localStorage.getItem(KEY)||'{}');
+const cbs=[...document.querySelectorAll('[data-id]')];
+function pinta(){
+  let n=0;
+  cbs.forEach(cb=>{const on=!!est[cb.dataset.id];cb.checked=on;
+    cb.closest('.paso,h3.sec').classList.toggle('done',on);if(on)n++;});
+  document.getElementById('hechos').textContent=n;
+  document.getElementById('bar').style.width=(cbs.length?n/cbs.length*100:0)+'%';
+}
+cbs.forEach(cb=>cb.addEventListener('change',()=>{est[cb.dataset.id]=cb.checked;
+  try{localStorage.setItem(KEY,JSON.stringify(est));}catch(e){}pinta();}));
+document.getElementById('reset').addEventListener('click',()=>{
+  for(const k in est) delete est[k];
+  try{localStorage.removeItem(KEY);}catch(e){}
+  pinta();window.scrollTo({top:0,behavior:'smooth'});});
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  const txt=b.closest('.codebox,.urlbox').querySelector('code').textContent;
+  try{await navigator.clipboard.writeText(txt);}
+  catch(e){const t=document.createElement('textarea');t.value=txt;
+    document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();}
+  const o=b.textContent;b.textContent='Copiado';b.classList.add('ko');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ko');},1400);}));
+const lb=document.getElementById('lb'),lbi=lb.querySelector('img');
+document.querySelectorAll('figure img').forEach(i=>i.addEventListener('click',()=>{
+  lbi.src=i.src;lb.classList.add('on');}));
+lb.addEventListener('click',()=>lb.classList.remove('on'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+pinta();
+</script>
+</body>
+</html>
