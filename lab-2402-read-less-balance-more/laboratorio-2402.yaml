@@ -1,0 +1,329 @@
+# Guion de la guía del lab 2402 «One bad query, three symptoms» (motor 05-motores/052-demos-html).
+#   python -B 05-motores/052-demos-html/scripts/generar.py <este fichero>
+# Borrador: las capturas que faltan se hacen en el ensayo (CAPTURAS.md); luego borrador: false.
+# Cada fragmento es una celda nueva del notebook que crea el alumno; el código se lee del notebook solución (desde:).
+# Las funciones del 2402-00 no se copian aquí: se nombran y se señala dónde mirarlas.
+# Diseño A → B → C validado el 21.11 con 2402-validate-demo.ipynb (medium): A 9,49 s · B 9,88 s · C 3,83 s, mismas 100 filas.
+titulo: One bad query, three symptoms
+kicker: Topic 24 · Lab 2
+subtitulo: 'An online shop wants its <b>top 100 customers by 2024 revenue</b>, per tier and product category. The
+  query joins four tables and it is slow. You will run it, read <b>three symptoms</b> in its Query Profile (no
+  pruning, a heavy shuffle and skew), let the platform name them, fix the predicate alone to see why one change is
+  not enough, then fix everything and prove it with an <b>honest benchmark</b>: same answer, a fraction of the time.'
+capturas: pictures
+clave: lab2402en
+idioma: en
+borrador: true
+modo: apartados
+salida: laboratorio-2402.html
+meta:
+- <b>8 blocks</b>
+- About 35 minutes (about 10 live, with the benchmarks run before the session)
+- Every snippet is one new cell of your notebook, copied with one click
+cierre: 'One bad query, three symptoms, three fixes. <b>No pruning</b> came from the filter and the layout: the
+  raw-column filter alone pruned nothing (B), it took the clustered layout too. The <b>heavy shuffle</b> came from
+  tens of millions of <code>order_items</code> rows travelling to the joins: filtering <code>order_items</code>
+  itself keeps them in the Scan. The <b>skew</b> came from one guest "customer" holding a quarter of the orders:
+  aggregating before the join with <code>customers</code> leaves one row per customer and category, so the hot key
+  no longer piles up in one task. Same answer, a fraction of the time, and every claim came with an honest benchmark.'
+contenido:
+
+- bloque:
+    num: '0'
+    titulo: Set up the environment
+    minutos: 5
+    concepto: 'A setup notebook creates the <code>lab2402.shop</code> schema with four tables of an online shop,
+      2023–2024: <code>customers</code> and <code>products</code> (5 M each at the default scale),
+      <code>orders</code> (10 M) and <code>order_items</code> (about 55 M, with the <code>order_date</code> of its
+      order). Three things are built in on purpose: <b>every file of <code>orders</code> and
+      <code>order_items</code> holds dates from both years</b>, the dimensions are <b>too big to broadcast</b>, and
+      <b>25% of the orders are guest checkouts</b>, all under the placeholder customer <code>customer_idx = 0</code>,
+      while 1% of the customers (the <i>whales</i>) place most of the rest.'
+- paso:
+    texto: 'Create <b>your</b> notebook, the one you will work in: in the folder <b>lab-2402-read-less-balance-more</b>,
+      <b>Create</b> → <b>Notebook</b>, name it <code>2402-01-read-less-balance-more</code> and attach it to
+      <b>Serverless</b>. Its first cell runs the setup notebook <code>2402-00-create-environment</code>: it builds the
+      tables the first time and reuses them afterwards. From here on, every snippet of this guide is <b>one new
+      cell</b> in this notebook.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 1
+    lenguaje: Python
+    cap: 2402-01-setup-run-all.png
+    ver: 'One line per table with its files (16 / 16 / 32 / 32 at <code>medium</code>, no clustering), and a table by
+      tier: <b>guest</b> with about 25% of the orders under <b>one</b> customer, <b>platinum</b> (the whales) with
+      most of the rest.'
+- ayuda: 'Building the tables takes a few minutes at <code>medium</code>. The <code>%run</code> cell adds three
+    widgets at the top of <b>your</b> notebook: <b>scale</b>, <b>guest_share</b> and <b>rebuild</b>. If it is too slow,
+    set <b>scale</b> to <code>small</code> and run the cell again (at <code>small</code> the joins may be broadcast,
+    so the shuffle is lighter). If the output says <i>Reusing</i> but you already ran the lab once, set
+    <b>rebuild</b> to <code>yes</code> and run it again: the lab clusters <code>orders</code> and
+    <code>order_items</code> in block 4.'
+- callout:
+    etiqueta: What the setup gives you
+    clase: info
+    texto: 'Four helpers you will call by name, defined in <b>2402-00 → 3 · Helpers used by the lab</b>:
+      <code>file_stats()</code> (files, size and clustering of a table), <code>run_fresh()</code> (runs a query to
+      the end with a unique comment, so the result cache cannot answer, without bringing its rows to the notebook), <code>benchmark()</code> (the honest
+      benchmark of block 2) and <code>compare()</code> (the proof of block 5). You do not need to read them to do
+      the lab.'
+- ayuda: 'If you get stuck in any block, open <code>2402-01-read-less-balance-more-solution</code>: it is the same
+    notebook, already built, cell by cell.'
+
+- bloque:
+    num: M
+    titulo: The method, before you measure
+    minutos: 3
+    concepto: 'Every step of this lab follows the same loop. The temptation is to jump straight to a fix (rewrite
+      the join, add a hint, buy a bigger cluster) on a hunch. A wrong hunch costs days and can make things worse. So
+      you look first, change one thing, and prove it.'
+- flujo:
+  - titulo: 1 · Measure
+    texto: Query Profile and <code>system.query.history</code>
+    'on': true
+  - titulo: 2 · Name it
+    texto: Find the bottleneck (Performance Insights names it for you, where available)
+  - titulo: 3 · One fix
+    texto: One change per round, or you will not know which one helped
+  - titulo: 4 · Benchmark
+    texto: Median of several runs, result cache off, cost and time
+- callout:
+    etiqueta: Two clocks
+    clase: info
+    texto: 'The Query Profile shows two durations. <b>Wall-clock</b> is what the user waited. <b>Aggregated task
+      time</b> is the sum of the time of every task on every core: the work the platform did, and on serverless
+      what you pay for. Task time is never below wall-clock. <b>Much bigger</b> means many cores worked at once.
+      <b>Close to it</b> means the work went through a few tasks while the other cores waited: not always a problem,
+      but it is exactly how <b>skew</b> looks.'
+- callout:
+    etiqueta: No profile for cache hits
+    clase: info
+    texto: 'If the <b>result cache</b> answers a query, no work happens and the Query Profile is <i>not available</i>.
+      To measure, make every run really execute: a unique comment in the SQL text (what the <code>benchmark</code>
+      helper does), or <code>SET use_cached_result = false</code> on a SQL warehouse. In
+      <code>system.query.history</code>, <code>from_result_cache = true</code> gives a cache hit away. The disk
+      cache is different: it keeps running and only changes the time, never what is pruned.'
+- callout:
+    etiqueta: Before you tune
+    clase: ok
+    texto: 'Check what the platform already did for you: <b>Photon</b> (tasks time in Photon), <b>AQE</b> (the final
+      plan) and, on managed tables, <b>Predictive Optimization</b>. Tune only the part they did not cover.'
+
+- bloque:
+    num: '1'
+    titulo: 'Measure first: three symptoms'
+    minutos: 8
+    concepto: 'Run the bad query once and read its Query Profile. You are looking for three things, and each one has
+      its own view of the graph: the <b>details panel</b> for pruning, the <b>Memory peak</b> colouring for the
+      shuffle, and the <b>Rows</b> colouring for the skew.'
+- paso:
+    texto: 'New cell: query <b>A</b>, as someone wrote it. Four tables, three joins, and a filter that wraps
+      <code>order_date</code> in <code>date_format()</code>. Paste it and run it.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 3
+    lenguaje: Python
+    cap: 2402-02-query-a-result.png
+    ver: 'The top 100 rows: revenue per customer, tier and category, highest first. The first rows belong to one
+      "customer" of tier <b>guest</b>: the placeholder that holds every guest checkout.'
+- paso:
+    texto: 'Open the Query Profile <b>in its own page</b>, where it is easier to read than in a side panel: under the
+      cell, <b>Show performance</b> → <b>View all in query history</b> (it opens in a new tab, filtered to this cell)
+      → click the query → <b>See query profile</b>.'
+    cap:
+    - 2402-03b-query-history.png
+    - 2402-03c-see-query-profile.png
+- paso:
+    texto: '<b>Symptom 1 · No pruning.</b> In the details panel on the left, read <b>Files read</b> and <b>Files
+      pruned</b> (the <code>▽ 0%</code> badge on the tiles says the same).'
+    cap: 2402-04-a-no-pruning.png
+    ver: 'Files pruned <b>0</b>, although the query only wants one year out of two. The filter wraps
+      <code>order_date</code> in a function, and the dates are mixed in every file anyway.'
+- paso:
+    texto: '<b>Symptom 2 · A heavy shuffle.</b> Colour the graph by <b>Memory peak</b> (top right). Then open <b>Top
+      operators</b>, the second icon of the left rail, keep <b>Memory peak</b> and filter the list by
+      <b>Shuffle</b>. Click the biggest one.'
+    cap: 2402-05-a-memory-peak-shuffle.png
+    ver: 'The darkest nodes are <b>Shuffle</b> nodes, and they lead the list with the most memory. The dimensions are
+      too big to broadcast, so each of the three joins moves both sides across the network. Look at the Shuffle on
+      <code>oi.order_idx</code>: <b>all</b> of <code>order_items</code> travels, both years, because the query
+      filters <code>orders</code> and not <code>order_items</code>. Keep that in mind for block 4.'
+- paso:
+    texto: '<b>Symptom 3 · Skew.</b> Colour the graph and the Top operators list by <b>Rows</b>. Find the
+      <b>Shuffle on <code>o.customer_idx</code></b> and the <b>Inner Join</b> above it: the join with
+      <code>customers</code>.'
+    cap: 2402-06-a-rows-skew.png
+    ver: 'The darkest path is the <code>order_items</code> branch (about 52 M rows): that is the heavy shuffle again.
+      The join with <code>customers</code> receives the 5 M orders of 2024 shuffled by <code>customer_idx</code>, and a
+      quarter of them carry the same key, <code>0</code>: they all land in <b>one partition</b>, so one task does the
+      work of many. The Rows colouring shows how many rows go through each operator, not how they are split between
+      tasks: block G shows the tool naming it.'
+- ayuda: 'If the Rows colouring does not make the hot path obvious, compare the two clocks in the details panel and
+    the duration of the tasks of the stage: one task much longer than the median (5 times or more) is the skew.'
+
+- bloque:
+    num: G
+    titulo: 'Click Optimize: two instructions from Genie Code'
+    minutos: 4
+    concepto: 'You have the symptoms. Now let the tool name them. <b>Performance Insights</b> (a preview) reads the
+      profile for you and lists what it finds, and <b>Optimize query</b> hands the query, its profile and its
+      insights to <b>Genie Code</b>, which answers with a recommendation in <b>two instructions</b>. You do not need
+      to read every metric yourself: <b>the tool reads them for you, you check its claim with a benchmark</b>.'
+- paso:
+    texto: 'In the Query Profile of A, open <b>Performance insights</b>: the light-bulb icon of the left rail. Read
+      the recommendation, then click <b>Optimize query</b>: Genie Code opens on the right and runs its analysis.'
+    cap: 2402-07-genie-optimize.png
+    ver: '<b>DATA_SKEW</b> on the <b>Inner Join <code>o.customer_idx = c.customer_idx</code></b>: some tasks took much
+      longer than the others. The recommendation lists the usual fixes: salting the hot key, a broadcast join for
+      the smaller side, or pre-aggregating. The graph marks the operator with a red <i>Recommendations</i> tag. Symptom
+      3, named for you.'
+    aviso: Performance Insights is a preview. If you do not see the light-bulb icon, a workspace admin enables it in
+      <b>Previews</b>.
+- callout:
+    etiqueta: Genie Code recommendation
+    clase: ok
+    texto: 'Replace <code>date_format(order_date, ''yyyy-MM'') BETWEEN …</code> with a <b>direct date range</b> on
+      <code>order_date</code>, then <b>cluster the table on <code>order_date</code></b> to enable file pruning.'
+- paso:
+    texto: '<b>Instruction 1 · Fix the predicate.</b> Compare the bare column with literals:
+      <code>o.order_date &gt;= DATE''2024-01-01'' AND o.order_date &lt; DATE''2025-01-01''</code>. The engine checks
+      each file''s min/max of <code>order_date</code> and skips the files that fall entirely outside the range. With
+      the column wrapped in a function, it must open every file and evaluate every row. You do it in block 3.'
+- paso:
+    texto: '<b>Instruction 2 · Fix the data layout.</b> Order the data by date, so that each file holds a narrow
+      range of dates: a smaller <code>delta.targetFileSize</code>, <code>CLUSTER BY (order_date)</code> and
+      <code>OPTIMIZE … FULL</code>. You do it in block 4.'
+- callout:
+    etiqueta: Why two instructions?
+    clase: info
+    texto: '<b>Instruction 1</b> removes the function, so the engine <b>can</b> use the per-file min/max.
+      <b>Instruction 2</b> reorders the data, so the files <b>are</b> organized by date. Without both,
+      <code>Files pruned</code> stays at 0. Block 3 proves the first half: instruction 1 alone, and nothing is pruned.'
+- callout:
+    etiqueta: And the shuffle and the skew?
+    clase: info
+    texto: 'Genie Code''s two instructions are about <b>reading</b>. The insights named more: the data skew on the
+      join with <code>customers</code>, with its usual fixes (salting, broadcast, or pre-aggregating). Block 4 applies
+      the two instructions <b>and</b> goes after the shuffle and the skew.'
+
+- bloque:
+    num: '2'
+    titulo: Benchmark A, honestly
+    minutos: 4
+    concepto: 'One run proves nothing: on serverless, compute varies from run to run. An <b>honest benchmark</b> has
+      four rules: <b>bypass the result cache</b> (a unique comment per run), <b>discard a warm-up</b> run, keep the
+      <b>median</b> of several runs, and <b>change one thing at a time</b>. A is benchmarked <b>now</b>, on the
+      layout it was written for.'
+- paso:
+    texto: 'New cell: <code>benchmark()</code> runs A once to warm up, then five timed runs, each with a unique
+      comment so the result cache cannot answer.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 5
+    lenguaje: Python
+    cap: 2402-08-benchmark-a.png
+    ver: Five timed runs and their median. The warm-up run is not printed in the median.
+- callout:
+    etiqueta: Go and look
+    clase: info
+    texto: 'Want to see how the four rules turn into code? Open <b>2402-00 → 3 · Helpers used by the lab</b> and
+      read <code>run_fresh()</code> and <code>benchmark()</code>: about fifteen lines. <code>run_fresh()</code> writes the
+      result to the <code>noop</code> sink: the whole query runs, but its rows are not brought to the notebook, so
+      you time the engine and not the transfer of the result. The comment that
+      <code>run_fresh()</code> appends, <code>/&#42; lab2402:A:run:… &#42;/</code>, only changes the SQL text,
+      so the result cache cannot match it.'
+- ayuda: If a run takes far longer than the others, that is exactly why we take the median. If all of them are slow
+    because the workspace is busy, run the cell again later.
+
+- bloque:
+    num: '3'
+    titulo: 'Instruction 1 alone: fix the predicate'
+    minutos: 5
+    concepto: 'One change only: the filter on the raw <code>order_date</code>. The tables are still unordered. This is
+      the "one change at a time" rule at work: you will see that this change, alone, is not enough.'
+- paso:
+    texto: 'New cell: query <b>B</b>. Run it and open its Query Profile.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 7
+    lenguaje: Python
+    cap: 2402-09-b-still-no-pruning.png
+    ver: '<b>Files pruned is still 0.</b> The engine can now use the min/max of every file, but every file spans
+      both years, so no file can be skipped. That is the "why two instructions" of Genie Code, measured.'
+- paso:
+    texto: 'New cell: the benchmark of B.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 8
+    lenguaje: Python
+    cap: 2402-10-benchmark-b.png
+    ver: A median close to A's. One instruction alone does not change what is read, nor what travels.
+
+- bloque:
+    num: '4'
+    titulo: 'Everything right: layout, filter and aggregation'
+    minutos: 8
+    concepto: 'Now fix each symptom where it is born. <b>No pruning:</b> cluster <code>orders</code> and
+      <code>order_items</code> by date, with small files, so a one-year filter skips whole files. <b>Heavy
+      shuffle:</b> <code>order_items</code> carries its own <code>order_date</code>; filter it too, and the 2023
+      lines never leave the Scan. <b>Skew:</b> follow the insight and aggregate <b>before</b> the join with
+      <code>customers</code>. The guest key collapses into one row per category, so nothing piles up in one task.
+      Query C returns exactly the same rows as A.'
+- paso:
+    texto: 'New cell: the layout, on both tables. It takes a couple of minutes at <code>medium</code>.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 10
+    lenguaje: Python
+    cap: 2402-11-cluster-optimize.png
+    ver: 'Both tables now report <code>clustering [''order_date'']</code> and many more, smaller files.'
+- paso:
+    texto: 'New cell: query <b>C</b>. Run it and open its Query Profile.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 11
+    lenguaje: Python
+    cap: 2402-12-c-everything-right.png
+    ver: 'The same top 100 rows as A. Now check the three symptoms again in its profile: <b>Files pruned</b> on the
+      Scan of <code>orders</code> and of <code>order_items</code> (click each one), the <b>Memory peak</b> of the
+      Shuffle on <code>oi.order_idx</code> next to A''s, and <b>Performance insights</b> for the skew on the join
+      with <code>customers</code>.'
+- paso:
+    texto: 'New cell: the benchmark of C.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 12
+    lenguaje: Python
+    cap: 2402-13-benchmark-c.png
+    ver: A median that is a fraction of A's.
+- callout:
+    etiqueta: One change at a time?
+    clase: info
+    texto: 'B followed the rule and showed why one fix alone was not enough. C applies three fixes at once to reach
+      the destination in one step. On your own queries, add them one by one and benchmark each: in this data, the
+      layout alone prunes files but hardly moves the clock, while the filter on <code>order_items</code> and the
+      early aggregation are what make it fast.'
+
+- bloque:
+    num: '5'
+    titulo: The proof
+    minutos: 3
+    concepto: 'Two questions, one cell: how much faster, and is it still the same answer? A rewrite that changes the
+      result is not an optimization.'
+- paso:
+    texto: 'New cell: <code>compare()</code> prints the median of every benchmark next to A''s, and checks that A and
+      C return the same rows.'
+    codigo:
+      desde: 2402-01-read-less-balance-more-solution.ipynb
+      celda: 14
+    lenguaje: Python
+    cap: 2402-14-proof.png
+    ver: 'A and B close to each other, C a fraction of A, and <code>A and C return the same 100 rows: True</code>.'
+- callout:
+    etiqueta: Keep going with Genie Code
+    clase: ok
+    texto: 'The <b>Optimize query</b> button in the Query Profile is only one door. The same assistant lives in
+      <b>notebooks</b> and in the <b>SQL editor</b>, so you can use it well beyond reading profiles: ask it to
+      <b>rewrite a slow query</b>, to <b>explain a Query Profile</b> you do not understand, or to <b>suggest
+      clustering keys</b> for a table. Then do what this lab did: change one thing and prove it with an honest
+      benchmark.'
